@@ -1,0 +1,17 @@
+{
+  "name": "Tablerista",
+  "short_name": "Tablerista",
+  "description": "Diseñá tableros eléctricos realistas, cableá, verificá normas AEA y generá el QR del plano.",
+  "lang": "es-AR",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0a0c0f",
+  "theme_color": "#0a0c0f",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

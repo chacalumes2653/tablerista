@@ -1,0 +1,1071 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0a0c0f">
+<meta name="description" content="Diseñá tableros eléctricos realistas, cableá, verificá normas AEA y generá el QR del plano.">
+<title>Tablerista</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600;700;800&family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme:dark;
+  --bg:#0a0c0f;--panel:#13161b;--panel2:#1a1e24;--line:rgba(255,255,255,.08);--line2:rgba(255,255,255,.16);
+  --tx:#eef0f2;--mut:#8f969e;--y:#f5c518;--y-soft:rgba(245,197,24,.14);--bad:#e5695c;
+  --display:"Exo 2","Arial Black",sans-serif;--sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--tx);font:14px/1.45 var(--sans);padding-inline:16px;padding-block:12px 40px}
+button,select,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--y);outline-offset:2px}
+
+.top{max-width:1500px;margin:0 auto 12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;border:1px solid var(--line2);border-radius:12px;padding:10px 14px;background:linear-gradient(180deg,#15181d,#0e1014);position:relative}
+.top::before,.top::after{content:"";position:absolute;width:26px;height:4px;top:-1px;background:repeating-linear-gradient(90deg,var(--y) 0 5px,transparent 5px 8px)}
+.top::before{left:18px}.top::after{right:18px}
+.brand{font:800 22px/1 var(--display);letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.brand b{color:var(--y);font-weight:800}
+.brand svg{width:26px;height:26px}
+#pname{flex:1 1 220px;min-width:0;background:transparent;border:1px solid transparent;border-radius:8px;padding:6px 10px;font-weight:600;font-size:15px}
+#pname:hover,#pname:focus{border-color:var(--line2);background:rgba(255,255,255,.03)}
+.tools{display:flex;flex-wrap:wrap;gap:6px}
+
+.btn{background:var(--panel2);border:1px solid var(--line2);border-radius:8px;padding:7px 12px;font-weight:500;font-size:13px;white-space:nowrap}
+.btn:hover{border-color:rgba(245,197,24,.5)}
+.btn:disabled{opacity:.35;cursor:default}
+.btn.pri{background:var(--y);border-color:var(--y);color:#141004;font-weight:700}
+.btn.danger{color:#f3a095;border-color:rgba(229,105,92,.45)}
+.btn.sm{padding:4px 9px;font-size:12px}
+.btn.on{border-color:var(--y);color:var(--y)}
+
+.work{max-width:1500px;margin:0 auto;display:grid;grid-template-columns:230px minmax(0,1fr) 280px;gap:14px;align-items:start}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.pal{padding:12px;display:flex;flex-direction:column;gap:14px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);max-height:calc(100vh - 24px);overflow:auto}
+.grp h3{margin:0 0 7px;font:700 11px var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--y)}
+.items{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pi{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;padding:8px 4px 6px;border-radius:9px;border:1px solid var(--line);background:#0f1216;touch-action:pan-x;user-select:none;-webkit-user-select:none;min-height:96px}
+.pi:hover{border-color:var(--line2)}
+.pi.on{border-color:var(--y);background:var(--y-soft)}
+.pi svg{height:60px;width:auto;pointer-events:none}
+.pi span{font-size:11.5px;line-height:1.2;text-align:center;color:#cfd4da}
+
+.stage{min-width:0;display:flex;flex-direction:column;gap:8px}
+.modes{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.seg{display:inline-flex;background:#0f1216;border:1px solid var(--line2);border-radius:9px;padding:3px}
+.seg button{background:none;border:0;border-radius:7px;padding:6px 14px;font:700 12px var(--display);letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
+.seg button.on{background:var(--y);color:#141004}
+.cabopts{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.cabopts[hidden]{display:none}
+.chip{width:28px;height:28px;border-radius:50%;border:2px solid transparent;padding:0;display:grid;place-items:center;background:none}
+.chip i{width:20px;height:20px;border-radius:50%;display:block;box-shadow:inset 0 -2px 0 rgba(0,0,0,.3)}
+.chip.on{border-color:var(--y)}
+.tg{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mut);background:#0f1216;border:1px solid var(--line2);border-radius:8px;padding:4px 8px}
+.tg select{background:transparent;border:0;font:600 12px var(--mono);color:var(--tx)}
+.zoom{margin-left:auto;display:flex;gap:4px}
+.hint{font-size:13px;color:var(--mut);display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-height:30px}
+.hint b{color:var(--y);font-weight:600}
+.hint.act{color:var(--tx)}
+.frame{position:relative;border-radius:14px;padding:6px;background:#050607;border:1px solid var(--line2)}
+.frame::before,.frame::after{content:"";position:absolute;width:22px;height:22px;border:2px solid var(--y);pointer-events:none}
+.frame::before{top:-2px;left:-2px;border-right:0;border-bottom:0;border-top-left-radius:12px}
+.frame::after{bottom:-2px;right:-2px;border-left:0;border-top:0;border-bottom-right-radius:12px}
+.scroll{overflow:auto;border-radius:10px;-webkit-overflow-scrolling:touch}
+#panel{display:block;height:auto;user-select:none;-webkit-user-select:none}
+#panel .dev{cursor:grab}
+#panel [data-end]{cursor:crosshair}
+#panel [data-cable]{cursor:pointer}
+
+.insp{padding:14px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+.ihead{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:2px}
+.ihead b{font:700 17px/1.2 var(--display);letter-spacing:.04em;text-transform:uppercase}
+#iclose{background:none;border:0;color:var(--mut);font-size:22px;line-height:1;padding:0 4px;display:none}
+#iloc{font:500 12px var(--mono);color:var(--mut);margin-bottom:12px}
+#ifields{display:flex;flex-direction:column;gap:10px}
+.f{display:flex;flex-direction:column;gap:4px}
+.f>span{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut)}
+.f input,.f select{background:#0f1216;border:1px solid var(--line2);border-radius:8px;padding:8px 10px;width:100%}
+.f select{font-family:var(--mono);font-weight:600}
+.row{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.icons{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
+.icons button{background:#f2f3f1;border:2px solid transparent;border-radius:8px;padding:4px;aspect-ratio:1;max-width:100%}
+.icons button.on{border-color:var(--y)}
+.icons svg{width:100%;height:100%}
+.empty{color:var(--mut);font-size:13px;margin:4px 0 0}
+
+.docs{max-width:1500px;margin:18px auto 0;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.card{padding:14px 16px}
+.card h2{margin:0 0 10px;font:800 16px var(--display);letter-spacing:.1em;text-transform:uppercase}
+.card h2 b{color:var(--y)}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;font:600 11px var(--sans);text-transform:uppercase;letter-spacing:.08em;color:var(--mut);padding:6px 8px;border-bottom:1px solid var(--line2)}
+td{padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.n{font:700 12.5px var(--mono);color:var(--y);white-space:nowrap}
+td.q{font:600 13px var(--mono);text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+td.m{color:var(--mut)}
+tr.sub td{color:var(--mut);font-size:12px}
+.nodata{color:var(--mut);font-size:13px}
+
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.78);display:flex;align-items:center;justify-content:center;z-index:60;padding:16px}
+.mbox{background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:16px;width:min(780px,100%);max-height:calc(100% - 20px);overflow:auto;display:flex;flex-direction:column;gap:12px}
+.mbox h2{margin:0;font:800 18px var(--display);letter-spacing:.1em;text-transform:uppercase}
+.mbox p{margin:0;color:var(--mut);font-size:13px}
+.mbox img{width:100%;border-radius:8px;background:#fff}
+.mbox textarea{width:100%;min-height:180px;background:#0b0d10;border:1px solid var(--line2);border-radius:10px;padding:10px;font:12px/1.4 var(--mono);color:var(--tx);resize:vertical}
+.file{position:relative;overflow:hidden}
+.file input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;background:#1c2027;border:1px solid var(--y);border-radius:10px;padding:9px 14px;font-size:13px;z-index:80;transition:.2s;pointer-events:none;max-width:calc(100% - 32px)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.ghost{position:fixed;left:0;top:0;pointer-events:none;z-index:70;opacity:.88;filter:drop-shadow(0 8px 14px rgba(0,0,0,.6))}
+
+@media (max-width:980px){
+  body{padding-block:10px 190px}
+  .work{grid-template-columns:minmax(0,1fr)}
+  .pal{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:20;max-height:none;flex-direction:row;overflow-x:auto;overflow-y:hidden;gap:14px;border-radius:14px 14px 0 0;border-bottom:0;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));background:#111418}
+  .grp{flex:none}
+  .items{display:flex;gap:6px}
+  .pi{min-height:90px;min-width:72px}
+  .insp{position:fixed;left:0;right:0;bottom:0;top:auto;z-index:30;border-radius:14px 14px 0 0;border-bottom:0;max-height:62vh;overflow:auto;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateY(105%);transition:transform .22s ease;box-shadow:0 -10px 30px rgba(0,0,0,.6)}
+  .insp.open{transform:none}
+  #iclose{display:block}
+  .docs{grid-template-columns:minmax(0,1fr)}
+  .tools .btn{padding:6px 10px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.vbar{max-width:1500px;margin:0 auto 12px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;border:1px solid var(--line2);border-left:4px solid var(--y);border-radius:12px;padding:12px 16px;background:linear-gradient(180deg,#15181d,#0e1014)}
+.vk{font:700 11px var(--display);letter-spacing:.16em;text-transform:uppercase;color:var(--y)}
+.vt{font:800 22px/1.15 var(--display);letter-spacing:.03em;text-wrap:balance}
+.vd{font:500 12px var(--mono);color:var(--mut)}
+body.viewing .top,body.viewing .pal,body.viewing .insp,body.viewing .seg,body.viewing #cabopts,body.viewing #hint{display:none!important}
+body.viewing .work{grid-template-columns:minmax(0,1fr)}
+body.viewing #bAuto{display:none}
+body.viewing{padding-block:12px 40px}
+body.vload .work,body.vload .docs{display:none!important}
+a.btn{color:inherit;text-decoration:none;display:inline-flex;align-items:center}
+.mbox code{font-family:var(--mono);color:var(--y)}
+.mbox.wide{width:min(980px,100%)}
+.qrwrap{background:#fff;border-radius:10px;padding:10px;display:flex;justify-content:center}
+.qrwrap img{width:min(420px,100%);background:#fff}
+.note{border-left:3px solid var(--y);padding-left:10px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.tabs button{background:#0f1216;border:1px solid var(--line2);border-radius:8px;padding:6px 12px;font:700 12px var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.tabs button.on{background:var(--y);border-color:var(--y);color:#141004}
+.norm{font-size:14px;line-height:1.55;max-width:78ch}
+.norm h3{font:800 15px var(--display);letter-spacing:.08em;text-transform:uppercase;color:var(--y);margin:18px 0 6px}
+.norm h3:first-child{margin-top:4px}
+.norm ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:4px}
+.norm table{margin:6px 0}
+.norm .src{font-size:12px;color:var(--mut);margin-top:16px}
+.norm .src a{color:#9cc3ff}
+.norm .warn{background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.3);border-radius:10px;padding:10px 12px;font-size:13px;color:#e8dca8}
+.sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:6px;border:1px solid rgba(255,255,255,.2)}
+.chk{list-style:none;padding:0!important}
+.chk li{display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#0f1216}
+.pill{flex:none;font:700 11px var(--mono);padding:2px 8px;border-radius:99px;margin-top:2px}
+.pill.ok{background:rgba(95,191,138,.18);color:#7fe0a6}.pill.wa{background:rgba(245,197,24,.18);color:#f5d45a}.pill.no{background:rgba(229,105,92,.2);color:#ff9b8f}
+.chk small{display:block;color:var(--mut)}
+.pubrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+</style>
+
+</head>
+<body>
+<header class="top">
+  <div class="brand"><svg viewBox="0 0 26 26" aria-hidden="true"><path d="M15 1 4 15h7l-2 10 11-14h-7z" fill="#f5c518" stroke="#141004" stroke-width="1.2" stroke-linejoin="round"/></svg><span>Tabler<b>ista</b></span></div>
+  <input id="pname" aria-label="Nombre del tablero" spellcheck="false">
+  <div class="tools">
+    <label class="tg">Filas <select id="rails"></select></label>
+    <label class="tg">Módulos <select id="mods"></select></label>
+    <button class="btn" id="bUndo">Deshacer</button>
+    <button class="btn" id="bRedo">Rehacer</button>
+    <button class="btn" id="bProj">Guardar / abrir</button>
+    <button class="btn" id="bSample">Ejemplo</button>
+    <button class="btn danger" id="bNew">Vaciar</button>
+    <button class="btn" id="bNorm">Normas AR</button>
+    <button class="btn" id="bQR">Código QR</button>
+    <button class="btn pri" id="bExport">Exportar plano</button>
+    <a class="btn" id="bApk" href="tablerista.apk" download>App Android</a>
+  </div>
+</header>
+<div class="vbar" id="vbar" hidden>
+  <div><div class="vk">Plano del tablero</div><div class="vt" id="vTitle"></div><div class="vd" id="vDate"></div></div>
+  <div class="row"><button class="btn" id="vNorm">Normas eléctricas</button><button class="btn" id="vExport">Descargar imagen</button></div>
+</div>
+
+<main class="work">
+  <section class="box pal" id="pal" aria-label="Componentes"></section>
+  <section class="stage">
+    <div class="modes">
+      <div class="seg" role="tablist"><button id="mMove" class="on">Mover</button><button id="mCable">Cablear</button></div>
+      <div class="cabopts" id="cabopts" hidden>
+        <div class="row" id="chips"></div>
+        <label class="tg">Trazo <select id="cDash"><option value="0">Continuo</option><option value="1">Punteado</option></select></label>
+        <label class="tg">Sección <select id="cSec"></select></label>
+      </div>
+      <div class="zoom"><button class="btn sm on" id="bSecs" title="Mostrar u ocultar la medida de cada cable">mm²</button><button class="btn sm" id="bAuto" title="Poner a cada cable la sección recomendada">Medidas auto</button><button class="btn sm" id="zOut" aria-label="Alejar">−</button><button class="btn sm" id="zIn" aria-label="Acercar">+</button></div>
+    </div>
+    <div class="hint" id="hint"></div>
+    <div class="frame"><div class="scroll" id="scroll"><svg id="panel" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tablero eléctrico"></svg></div></div>
+  </section>
+  <aside class="box insp" id="insp" aria-label="Propiedades">
+    <div class="ihead"><b id="iname">Propiedades</b><button id="iclose" aria-label="Cerrar">×</button></div>
+    <div id="iloc"></div>
+    <div id="ifields"></div>
+  </aside>
+</main>
+
+<section class="docs">
+  <div class="box card"><h2>Circuitos <b>/</b> salidas</h2><div class="tw" id="legend"></div></div>
+  <div class="box card"><h2>Lista de <b>materiales</b></h2><div class="tw" id="mat"></div></div>
+</section>
+
+<div class="modal" id="mQR" hidden>
+  <div class="mbox">
+    <h2>Código QR del tablero</h2>
+    <p id="qrStatus"></p>
+    <div class="qrwrap"><img id="qrImg" alt="Etiqueta con código QR del tablero"></div>
+    <p>Mantené presionada la etiqueta para guardarla, o descargala e imprimila. Pegala en la tapa del tablero: quien la escanee ve el plano, los circuitos y las salidas, sin poder modificar nada.</p>
+    <div class="row"><button class="btn pri" id="qPub">Publicar tablero</button><button class="btn" id="qDl">Descargar etiqueta</button><button class="btn" id="qShare">Compartir</button><button class="btn" id="qCopy">Copiar enlace</button><button class="btn" id="qClose">Cerrar</button></div>
+    <p class="note">El QR abre el plano en la página web de Tablerista: cualquiera lo ve sin instalar nada ni tener cuenta. Si después cambiás el tablero, tocá <b>Actualizar publicación</b>: el QR impreso sigue sirviendo y muestra la versión nueva.</p>
+    <div id="qList"></div>
+  </div>
+</div>
+<div class="modal" id="mNorm" hidden>
+  <div class="mbox wide">
+    <div class="row" style="justify-content:space-between"><h2>Normas eléctricas <b style="color:var(--y)">Argentina</b></h2><button class="btn" id="nClose">Cerrar</button></div>
+    <div class="tabs" id="nTabs"></div>
+    <div class="norm" id="nBody"></div>
+  </div>
+</div>
+<div class="modal" id="mExport" hidden>
+  <div class="mbox">
+    <h2>Plano del tablero</h2>
+    <p>Mantené presionada la imagen (o clic derecho → Guardar imagen) para guardarla o mandarla por WhatsApp.</p>
+    <img id="expImg" alt="Plano exportado del tablero">
+    <div class="row"><button class="btn" id="bShareImg">Compartir</button><button class="btn" id="bDlImg">Descargar PNG</button><button class="btn" id="bCopyImg">Copiar imagen</button><button class="btn pri" id="bCloseExp">Cerrar</button></div>
+  </div>
+</div>
+<div class="modal" id="mProj" hidden>
+  <div class="mbox">
+    <h2>Guardar / abrir</h2>
+    <p>El tablero se guarda solo en este equipo. Para pasarlo a otro, guardá el archivo .json (o copiá el texto) y abrilo allá.</p>
+    <textarea id="projTxt" spellcheck="false" aria-label="Proyecto en texto"></textarea>
+    <div class="row">
+      <button class="btn" id="bSaveJson">Guardar archivo .json</button><button class="btn" id="bCopyJson">Copiar texto</button>
+      <button class="btn" id="bLoadJson">Abrir este texto</button>
+      <span class="btn file">Abrir archivo .json<input type="file" id="fileIn" accept=".json,application/json,text/plain"></span>
+      <button class="btn pri" id="bCloseProj">Cerrar</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<div class="ghost" id="ghost" hidden></div>
+
+<script src="config.js"></script>
+<script id="app">
+const QR=(()=>{
+  const ECC=[-1,10,16,26,18,24,16,18,22,22,26,30,22,22,24,24,28,28,26,26,26,26,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28,28];
+  const BLK=[-1,1,1,1,2,2,4,4,4,5,5,5,8,9,9,10,10,11,13,14,16,17,17,18,20,21,23,25,26,28,29,31,33,35,37,38,40,43,45,47,49];
+  const raw=v=>{let r=(16*v+128)*v+64;if(v>=2){const n=Math.floor(v/7)+2;r-=(25*n-10)*n-55;if(v>=7)r-=36}return r};
+  const dataCw=v=>Math.floor(raw(v)/8)-ECC[v]*BLK[v];
+  const mul=(x,y)=>{let z=0;for(let i=7;i>=0;i--){z=(z<<1)^((z>>>7)*0x11D);z^=((y>>>i)&1)*x}return z&255};
+  function divisor(d){const r=new Array(d).fill(0);r[d-1]=1;let root=1;for(let i=0;i<d;i++){for(let j=0;j<d;j++){r[j]=mul(r[j],root);if(j+1<d)r[j]^=r[j+1]}root=mul(root,2)}return r}
+  function rem(data,div){const r=new Array(div.length).fill(0);for(const b of data){const f=b^r.shift();r.push(0);div.forEach((c,i)=>r[i]^=mul(c,f))}return r}
+  const bit=(x,i)=>((x>>>i)&1)!==0;
+  function encode(text){
+    const bytes=Array.from(new TextEncoder().encode(text));let v=1;
+    for(;v<=40;v++){if(4+(v<10?8:16)+bytes.length*8<=dataCw(v)*8)break}
+    if(v>40)throw new Error('too long');
+    const bb=[];const put=(val,len)=>{for(let i=len-1;i>=0;i--)bb.push((val>>>i)&1)};
+    put(4,4);put(bytes.length,v<10?8:16);bytes.forEach(b=>put(b,8));
+    const cap=dataCw(v)*8;put(0,Math.min(4,cap-bb.length));put(0,(8-bb.length%8)%8);
+    for(let p=0xEC;bb.length<cap;p^=0xEC^0x11)put(p,8);
+    const data=[];for(let i=0;i<bb.length;i+=8){let x=0;for(let j=0;j<8;j++)x=(x<<1)|bb[i+j];data.push(x)}
+    const nb=BLK[v],el=ECC[v],rc=Math.floor(raw(v)/8),ns=nb-rc%nb,sl=Math.floor(rc/nb),dv=divisor(el),blocks=[];
+    for(let i=0,k=0;i<nb;i++){const d=data.slice(k,k+sl-el+(i<ns?0:1));k+=d.length;const e=rem(d,dv);if(i<ns)d.push(0);blocks.push(d.concat(e))}
+    const cw=[];for(let i=0;i<blocks[0].length;i++)blocks.forEach((b,j)=>{if(i!==sl-el||j>=ns)cw.push(b[i])});
+    const size=v*4+17,M=[],F=[];for(let y=0;y<size;y++){M.push(new Array(size).fill(false));F.push(new Array(size).fill(false))}
+    const sf=(x,y,d)=>{M[y][x]=d;F[y][x]=true};
+    for(let i=0;i<size;i++){sf(6,i,i%2===0);sf(i,6,i%2===0)}
+    const finder=(x,y)=>{for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){const d=Math.max(Math.abs(dx),Math.abs(dy)),xx=x+dx,yy=y+dy;if(xx>=0&&xx<size&&yy>=0&&yy<size)sf(xx,yy,d!==2&&d!==4)}};
+    finder(3,3);finder(size-4,3);finder(3,size-4);
+    if(v>1){const n=Math.floor(v/7)+2,step=v===32?26:Math.ceil((v*4+4)/(n*2-2))*2,pos=[6];for(let p=size-7;pos.length<n;p-=step)pos.splice(1,0,p);
+      for(let i=0;i<n;i++)for(let j=0;j<n;j++){if((i===0&&j===0)||(i===0&&j===n-1)||(i===n-1&&j===0))continue;for(let dy=-2;dy<=2;dy++)for(let dx=-2;dx<=2;dx++)sf(pos[i]+dx,pos[j]+dy,Math.max(Math.abs(dx),Math.abs(dy))!==1)}}
+    const fmt=mask=>{const d=(0<<3)|mask;let r=d;for(let i=0;i<10;i++)r=(r<<1)^((r>>>9)*0x537);const b=((d<<10)|r)^0x5412;
+      for(let i=0;i<=5;i++)sf(8,i,bit(b,i));sf(8,7,bit(b,6));sf(8,8,bit(b,7));sf(7,8,bit(b,8));for(let i=9;i<15;i++)sf(14-i,8,bit(b,i));
+      for(let i=0;i<8;i++)sf(size-1-i,8,bit(b,i));for(let i=8;i<15;i++)sf(8,size-15+i,bit(b,i));sf(8,size-8,true)};
+    fmt(0);
+    if(v>=7){let r=v;for(let i=0;i<12;i++)r=(r<<1)^((r>>>11)*0x1F25);const b=(v<<12)|r;for(let i=0;i<18;i++){const a=size-11+i%3,c=Math.floor(i/3);sf(a,c,bit(b,i));sf(c,a,bit(b,i))}}
+    let i=0;for(let right=size-1;right>=1;right-=2){if(right===6)right=5;for(let vert=0;vert<size;vert++)for(let j=0;j<2;j++){const x=right-j,up=((right+1)&2)===0,y=up?size-1-vert:vert;if(!F[y][x]&&i<cw.length*8){M[y][x]=bit(cw[i>>>3],7-(i&7));i++}}}
+    const inv=(m,x,y)=>[(x+y)%2===0,y%2===0,x%3===0,(x+y)%3===0,(Math.floor(x/3)+Math.floor(y/2))%2===0,x*y%2+x*y%3===0,(x*y%2+x*y%3)%2===0,((x+y)%2+x*y%3)%2===0][m];
+    const apply=m=>{for(let y=0;y<size;y++)for(let x=0;x<size;x++)if(!F[y][x]&&inv(m,x,y))M[y][x]=!M[y][x]};
+    const penalty=()=>{let p=0,dark=0;
+      for(let y=0;y<size;y++){for(const hz of [true,false]){let run=1;for(let x=1;x<size;x++){const a=hz?M[y][x]:M[x][y],b=hz?M[y][x-1]:M[x-1][y];if(a===b){run++;if(run===5)p+=3;else if(run>5)p++}else run=1}}}
+      for(let y=0;y<size-1;y++)for(let x=0;x<size-1;x++){const c=M[y][x];if(c===M[y][x+1]&&c===M[y+1][x]&&c===M[y+1][x+1])p+=3}
+      for(let y=0;y<size;y++)for(let x=0;x<size;x++)if(M[y][x])dark++;
+      return p+Math.floor(Math.abs(dark*20-size*size*10)/(size*size))*10};
+    let best=0,bp=1e9;for(let m=0;m<8;m++){apply(m);fmt(m);const p=penalty();if(p<bp){bp=p;best=m}apply(m)}
+    apply(best);fmt(best);return M}
+  return{encode}})();
+
+(()=>{
+const U=36,DH=180,SIDE=50,TOP=150,PITCH=280,BOTZ=110,GZ=150,LANE=7;
+const MONO="IBM Plex Mono, Menlo, Consolas, monospace",SANS="IBM Plex Sans, Helvetica, Arial, sans-serif";
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9);
+const f1=v=>Math.round(v*10)/10;
+const T_=(x,y,t,sz,wt,fill,anc,fam)=>`<text x="${f1(x)}" y="${f1(y)}" font-size="${sz}" font-weight="${wt||500}" fill="${fill||'#1e2225'}" text-anchor="${anc||'middle'}" font-family="${fam||MONO}">${esc(t)}</text>`;
+function wrap(t,mx,maxL){const ws=String(t||'').split(/\s+/).filter(Boolean),L=[];let cur='';for(const w of ws){const c=cur?cur+' '+w:w;if(c.length<=mx)cur=c;else{if(cur)L.push(cur);cur=w.length>mx?w.slice(0,mx):w}}if(cur)L.push(cur);if(L.length>maxL){L.length=maxL;L[maxL-1]=L[maxL-1].slice(0,Math.max(1,mx-1))+'…'}return L}
+
+/* ---------------- defs ---------------- */
+const DEFS=`<defs>
+<linearGradient id="gB" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e2e5e4"/><stop offset=".45" stop-color="#fafbfa"/><stop offset="1" stop-color="#d8dbda"/></linearGradient>
+<linearGradient id="gG" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#bfc4c5"/><stop offset=".5" stop-color="#d6dadb"/><stop offset="1" stop-color="#b6bbbc"/></linearGradient>
+<linearGradient id="gW" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#eceeec"/><stop offset=".5" stop-color="#fbfbfa"/><stop offset="1" stop-color="#e3e6e4"/></linearGradient>
+<radialGradient id="gScrew" cx=".38" cy=".34" r=".75"><stop offset="0" stop-color="#fafafa"/><stop offset=".55" stop-color="#b9bdbd"/><stop offset="1" stop-color="#7e8384"/></radialGradient>
+<linearGradient id="gLv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a3d41"/><stop offset="1" stop-color="#0f1113"/></linearGradient>
+<linearGradient id="gRail" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b5babb"/><stop offset=".22" stop-color="#e6e8e8"/><stop offset=".5" stop-color="#cdd1d1"/><stop offset=".78" stop-color="#e2e4e4"/><stop offset="1" stop-color="#a6abac"/></linearGradient>
+<linearGradient id="gEnc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d3d7d8"/><stop offset="1" stop-color="#b3b8ba"/></linearGradient>
+<linearGradient id="gPlate" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f6f7f6"/><stop offset="1" stop-color="#e3e6e5"/></linearGradient>
+<linearGradient id="gBrass" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3d77b"/><stop offset=".5" stop-color="#d4a93d"/><stop offset="1" stop-color="#a47a1c"/></linearGradient>
+<linearGradient id="gGland" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#8d9295"/><stop offset=".45" stop-color="#d3d6d7"/><stop offset="1" stop-color="#7c8184"/></linearGradient>
+<radialGradient id="gGloss" cx=".35" cy=".3" r=".65"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".5" stop-color="#fff" stop-opacity=".15"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+<pattern id="pPE" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(35)"><rect width="8" height="8" fill="#3f9a4f"/><rect width="3.5" height="8" fill="#e9cf2c"/></pattern>
+<filter id="fSh" x="-15%" y="-8%" width="140%" height="122%"><feDropShadow dx="1.5" dy="3" stdDeviation="2.4" flood-color="#000" flood-opacity=".3"/></filter>
+</defs>`;
+
+/* ---------------- device drawing ---------------- */
+const screw=(cx,cy,r=6.6)=>`<circle cx="${f1(cx)}" cy="${f1(cy)}" r="${r}" fill="url(#gScrew)" stroke="#5f6465" stroke-width=".6"/><path d="M${f1(cx-r*.55)} ${f1(cy)}H${f1(cx+r*.55)}M${f1(cx)} ${f1(cy-r*.55)}V${f1(cy+r*.55)}" stroke="#555a5c" stroke-width="1.3" stroke-linecap="round"/>`;
+const tb=(cx,cy)=>`<rect x="${f1(cx-10)}" y="${cy-10}" width="20" height="20" rx="2.5" fill="#44484c"/>`+screw(cx,cy);
+function base(x,y,n,o={}){
+  const w=n*U;let s=`<rect x="${x+1.8}" y="${y}" width="${w-3.6}" height="${DH}" rx="4" fill="${o.fill||'url(#gB)'}" stroke="#4f5458" stroke-width="1.2"/>`;
+  s+=`<rect x="${x+2.4}" y="${y+.6}" width="${w-4.8}" height="39" rx="3.5" fill="rgba(0,0,0,.07)"/><rect x="${x+2.4}" y="${y+DH-39.6}" width="${w-4.8}" height="39" rx="3.5" fill="rgba(0,0,0,.07)"/>`;
+  s+=`<line x1="${x+2.4}" y1="${y+40}" x2="${x+w-2.4}" y2="${y+40}" stroke="rgba(0,0,0,.28)"/><line x1="${x+2.4}" y1="${y+DH-40}" x2="${x+w-2.4}" y2="${y+DH-40}" stroke="rgba(0,0,0,.28)"/>`;
+  for(let i=1;i<n;i++)s+=`<line x1="${x+i*U}" y1="${y+2}" x2="${x+i*U}" y2="${y+DH-2}" stroke="rgba(0,0,0,.16)"/>`;
+  if(!o.noTerm){const tn=o.tn||n;for(let i=0;i<tn;i++){const cx=x+(w/tn)*(i+.5);s+=tb(cx,y+20)+tb(cx,y+DH-20)}}
+  return s;
+}
+const toggle=(cx,y,wd)=>`<rect x="${f1(cx-wd/2-4)}" y="${y+93}" width="${wd+8}" height="44" rx="3" fill="#2b2e31"/><rect x="${f1(cx-wd/2)}" y="${y+95}" width="${wd}" height="26" rx="2.5" fill="url(#gLv)"/><rect x="${f1(cx-wd/2+2)}" y="${y+97}" width="${wd-4}" height="2.5" rx="1" fill="rgba(255,255,255,.22)"/><rect x="${f1(cx-wd/2+1)}" y="${y+124}" width="${wd-2}" height="9" rx="1.5" fill="#d63a2c"/>`+T_(cx,y+130.8,'I-ON',5,700,'#fff');
+function ylabel(x,y,w,top,name,band){
+  let s=`<rect x="${x+3.5}" y="${y+42}" width="${w-7}" height="47" rx="2" fill="#ffd21a" stroke="rgba(0,0,0,.4)" stroke-width=".8"/>`;
+  let ty=y+60;
+  if(band){s+=`<rect x="${x+3.5}" y="${y+42}" width="${w-7}" height="13" rx="2" fill="#1f5fbf"/>`+T_(x+w/2,y+51.4,band,6.8,700,'#fff','middle',SANS);ty=y+68}
+  if(top)s+=T_(x+w/2,ty,top,band?11:15,800,'#111','middle',SANS);
+  const ly=top?ty+9:(band?y+64:y+56),maxL=band?(top?1:3):(top?2:4);
+  wrap(name,Math.max(4,Math.floor((w-9)/3.9)),maxL).forEach((l,i)=>s+=T_(x+w/2,ly+i*8,l,7,600,'#111','middle',SANS));return s}
+function tagBelow(x,y,w,name){if(!name)return'';const L=wrap(name,Math.max(4,Math.floor((w-8)/3.7)),2);
+  let s=`<rect x="${x+3}" y="${y+DH+5}" width="${w-6}" height="${L.length>1?21:13}" rx="1.5" fill="#f7d31c" stroke="rgba(0,0,0,.25)" stroke-width=".6"/>`;
+  L.forEach((l,i)=>s+=T_(x+w/2,y+DH+13.6+i*7.6,l,6.4,600,'#161616','middle',SANS));return s}
+const clip=(x,y,w)=>`<rect x="${x+w-17}" y="${y-5}" width="13" height="11" rx="2.5" fill="#f2a12c" stroke="rgba(0,0,0,.3)" stroke-width=".6"/>`;
+const KA={'3kA':'3000','4.5kA':'4500','6kA':'6000','10kA':'10000'};
+const LAMP={Rojo:'#e0412f',Verde:'#33b25a','Ámbar':'#f0a020',Azul:'#2f7fe0'};
+
+const TYPES={
+  term:{name:'Térmica',w:p=>+p.poles,face:true,props:{poles:['1','2','3','4'],curve:['B','C','D'],amp:['2','4','6','10','16','20','25','32','40','50','63'],ka:['3kA','4.5kA','6kA','10kA']},def:{poles:'2',curve:'C',amp:'16',ka:'4.5kA'},
+    desc:p=>`Interruptor termomagnético ${p.poles}P curva ${p.curve} ${p.amp} A ${p.ka}`,short:p=>`${p.poles}P ${p.curve}${p.amp}`,
+    draw(x,y,p){const n=+p.poles,w=n*U;let s=base(x,y,n)+ylabel(x,y,w,p.amp+'A',p.label);
+      for(let i=0;i<n;i++)s+=toggle(x+U*(i+.5),y,16);
+      if(n>1)s+=`<rect x="${x+U/2-9}" y="${y+106}" width="${(n-1)*U+18}" height="5" rx="2" fill="#0c0d0e"/>`;
+      s+=T_(x+w/2,y+145,n>1?`${p.curve}${p.amp} · ${KA[p.ka]}`:p.curve+p.amp,5.8,700,'#50565a');
+      if(n>1)s+=clip(x,y,w);return s}},
+  dif:{name:'Disyuntor diferencial',w:p=>+p.poles,face:true,props:{poles:['2','4'],amp:['25','40','63'],sens:['30mA','300mA']},def:{poles:'2',amp:'40',sens:'30mA'},
+    desc:p=>`Interruptor diferencial ${p.poles}P ${p.amp} A ${p.sens}`,short:p=>`Dif. ${p.poles}P ${p.amp}A ${p.sens}`,
+    draw(x,y,p){const n=+p.poles,w=n*U,cx=x+w/2;let s=base(x,y,n)+ylabel(x,y,w,'',p.label||'Diferencial',`DIF ${p.amp}A ${p.sens}`);
+      s+=toggle(cx,y,n==4?34:24);
+      s+=`<rect x="${x+w-18}" y="${y+100}" width="13" height="13" rx="2" fill="#2f63b3" stroke="#1d3e73"/>`+T_(x+w-11.5,y+109.5,'T',7.5,700,'#fff');
+      s+=`<rect x="${x+6}" y="${y+100}" width="11" height="7" rx="1" fill="#e9ecec" stroke="#666" stroke-width=".6"/>`;
+      s+=T_(cx,y+145,`ID ${p.poles}P`,5.8,700,'#50565a');return s+clip(x,y,w)}},
+  dps:{name:'Protector de sobretensión',w:p=>+p.poles,props:{poles:['2','4'],kA:['20kA','40kA']},def:{poles:'2',kA:'40kA'},
+    desc:p=>`Protector de sobretensiones transitorias (DPS) ${p.poles}P ${p.kA}`,short:p=>`DPS ${p.kA}`,
+    draw(x,y,p){const n=+p.poles,w=n*U,cx=x+w/2;let s=base(x,y,n,{fill:'url(#gG)'});
+      for(let i=0;i<n;i++){const c=x+U*(i+.5);s+=`<rect x="${c-9}" y="${y+50}" width="18" height="11" rx="1.5" fill="#1f2a22"/><rect x="${c-7}" y="${y+52}" width="14" height="7" rx="1" fill="#58c27d"/>`}
+      s+=T_(cx,y+86,'DPS',12,700)+T_(cx,y+102,'Imax '+p.kA,6.5,600,'#333')+T_(cx,y+114,'Uc 275V',6.5,500,'#333');return s+tagBelow(x,y,w,p.label)}},
+  ptens:{name:'Protector de tensión',w:()=>2,props:{},def:{},
+    desc:()=>`Protector de tensión digital (sobre y subtensión) 40 A`,short:()=>'Prot. tensión',
+    draw(x,y,p){const cx=x+38;let s=base(x,y,2,{fill:'url(#gW)'});
+      s+=`<rect x="${x+12}" y="${y+46}" width="52" height="21" rx="2" fill="#1a0806" stroke="#000"/>`+T_(cx,y+62,'230',14,700,'#ff3b2a');
+      s+=`<rect x="${x+12}" y="${y+71}" width="52" height="21" rx="2" fill="#041a0c" stroke="#000"/>`+T_(cx,y+87,'80.0',14,700,'#35f06f');
+      [['#e0412f',50],['#e0412f',60],['#35c46a',74],['#35c46a',84]].forEach(([c,yy])=>s+=`<circle cx="${x+6.5}" cy="${y+yy}" r="2.2" fill="${c}"/>`);
+      for(let i=0;i<3;i++)s+=`<circle cx="${x+20+i*16}" cy="${y+106}" r="4.5" fill="#dfe2e3" stroke="#777" stroke-width=".8"/>`;
+      s+=T_(cx-2,y+124,'VOLTAGE PROTECTOR',4.6,700,'#555');return s+tagBelow(x,y,72,p.label)}},
+  bdist:{name:'Bornera de distribución',w:()=>4,props:{color:['Fase y neutro','Tierra']},def:{color:'Fase y neutro'},
+    desc:p=>p.color==='Tierra'?'Bornera de distribución de tierra para riel DIN (2×6 bornes)':'Bornera de distribución fase y neutro para riel DIN (2×6 bornes)',short:()=>'Bornera distrib.',
+    terms(x,y){const o=[];for(let i=0;i<6;i++){const cx=x+18+i*21.6;o.push({k:'u'+i,x:cx,y:y+59,dir:-1},{k:'d'+i,x:cx,y:y+121,dir:1})}return o},
+    draw(x,y,p){const w=4*U,bc=p.color==='Tierra'?'#3f8f4c':'#7c8388';
+      let s=`<rect x="${x+w/2-20}" y="${y+6}" width="40" height="20" rx="3" fill="${bc}"/><rect x="${x+w/2-20}" y="${y+DH-26}" width="40" height="20" rx="3" fill="${bc}"/>`;
+      s+=`<rect x="${x+2}" y="${y+22}" width="${w-4}" height="${DH-44}" rx="6" fill="${bc}" stroke="rgba(0,0,0,.45)"/>`;
+      for(const yy of [y+50,y+112]){s+=`<rect x="${x+9}" y="${yy}" width="${w-18}" height="18" rx="3" fill="url(#gBrass)" stroke="#7a5a14" stroke-width=".7"/>`;for(let i=0;i<6;i++)s+=screw(x+18+i*21.6,yy+9,5.6)}
+      s+=`<rect x="${x+5}" y="${y+38}" width="${w-10}" height="104" rx="5" fill="rgba(255,255,255,.14)" stroke="rgba(255,255,255,.6)"/><rect x="${x+9}" y="${y+41}" width="${w-18}" height="4" rx="2" fill="rgba(255,255,255,.35)"/>`;
+      s+=T_(x+w/2,y+95,p.color==='Tierra'?'PE':'L · N',8,700,'#fff');return s+tagBelow(x,y,w,p.label)}},
+  fus:{name:'Portafusible',w:()=>1,props:{amp:['2','4','6','10','16','20','25','32']},def:{amp:'10'},
+    desc:p=>`Seccionador portafusible 10x38 con fusible ${p.amp} A`,short:p=>`Fusible ${p.amp}A`,
+    draw(x,y,p){const cx=x+18;let s=base(x,y,1);
+      s+=`<rect x="${x+5}" y="${y+44}" width="26" height="92" rx="3" fill="#2c3034" stroke="#15181a"/><rect x="${x+10}" y="${y+56}" width="16" height="34" rx="2" fill="#8d979c"/><rect x="${x+13}" y="${y+58}" width="10" height="30" rx="1.5" fill="#e8e2cf"/>`;
+      s+=T_(cx,y+108,p.amp+'A',8,700,'#f2f2f2')+T_(cx,y+121,'10x38',5.5,500,'#bbb');return s+tagBelow(x,y,U,p.label)}},
+  cont:{name:'Contactor',w:()=>2,props:{amp:['16','20','25','40','63'],contacts:['2NA','4NA','2NA+2NC']},def:{amp:'25',contacts:'2NA'},
+    desc:p=>`Contactor modular ${p.amp} A ${p.contacts} bobina 230 V`,short:p=>`CT ${p.amp}A`,
+    draw(x,y,p){const cx=x+36;let s=base(x,y,2,{fill:'url(#gG)'});
+      s+=`<rect x="${cx-13}" y="${y+50}" width="26" height="36" rx="2" fill="#2a2e31"/><rect x="${cx-9}" y="${y+54}" width="18" height="13" rx="1.5" fill="#d8dad6"/>`;
+      s+=T_(cx,y+103,'CT '+p.amp+'A',9,700)+T_(cx,y+116,p.contacts,7,600,'#333')+T_(cx,y+130,'A1-A2 230V~',5.5,500,'#333');return s+tagBelow(x,y,72,p.label)}},
+  rele:{name:'Telerruptor',w:()=>1,props:{amp:['16','20']},def:{amp:'16'},
+    desc:p=>`Telerruptor (relé de impulso) ${p.amp} A bobina 230 V`,short:p=>`TL ${p.amp}A`,
+    draw(x,y,p){const cx=x+18;let s=base(x,y,1);
+      s+=`<rect x="${cx-10}" y="${y+54}" width="20" height="36" rx="3" fill="#1b1e21"/><rect x="${cx-8}" y="${y+56}" width="16" height="32" rx="2.5" fill="url(#gLv)"/>`;
+      s+=T_(cx,y+108,'TL',8,700)+T_(cx,y+121,p.amp+'A',8,700);return s+tagBelow(x,y,U,p.label)}},
+  timer:{name:'Programador horario',w:()=>2,props:{kind:['Digital','Analógico']},def:{kind:'Digital'},
+    desc:p=>`Programador horario ${p.kind.toLowerCase()} para riel DIN 16 A`,short:p=>`Reloj ${p.kind.toLowerCase()}`,
+    draw(x,y,p){const cx=x+36;let s=base(x,y,2);
+      if(p.kind==='Analógico'){const cy=y+86;s+=`<circle cx="${cx}" cy="${cy}" r="27" fill="#f7f5ea" stroke="#55595b"/>`;
+        for(let k=0;k<24;k++){const a=k*Math.PI/12;s+=`<circle cx="${f1(cx+22*Math.sin(a))}" cy="${f1(cy-22*Math.cos(a))}" r="2.2" fill="${k>=7&&k<=19?'#2d3033':'#c9ccc6'}"/>`}
+        s+=`<circle cx="${cx}" cy="${cy}" r="7" fill="#9aa0a3" stroke="#555"/><path d="M${cx} ${cy-15}l-3 6h6z" fill="#e0412f"/>`;}
+      else{s+=`<rect x="${x+7}" y="${y+48}" width="58" height="28" rx="2" fill="#c3cfae" stroke="#56604a"/>`+T_(cx,y+67,'08:30',12,700,'#1e2a18')+T_(x+12,y+56,'ON',5,700,'#1e2a18','start');
+        for(let i=0;i<4;i++)s+=`<rect x="${x+11+i*14}" y="${y+86}" width="10" height="7" rx="1.5" fill="#2f5fb3"/>`;
+        s+=T_(cx,y+116,'PROG. HORARIO',5.5,700,'#333');}
+      return s+tagBelow(x,y,72,p.label)}},
+  volt:{name:'Instrumento de medición',w:p=>p.kind==='Multimedidor'?4:2,tn:()=>2,props:{kind:['Voltímetro','Amperímetro','Multimedidor']},def:{kind:'Voltímetro'},
+    desc:p=>`${p.kind} digital para riel DIN`,short:p=>p.kind,
+    draw(x,y,p){const n=p.kind==='Multimedidor'?4:2,w=n*U,cx=x+w/2;let s=base(x,y,n,{tn:2});
+      if(n===4){s+=`<rect x="${x+10}" y="${y+46}" width="${w-20}" height="48" rx="3" fill="#c9d4c6" stroke="#4d574c"/>`+T_(cx-14,y+66,'216',15,700,'#151a14')+T_(cx+34,y+62,'7.8',10,700,'#151a14')+T_(cx,y+87,'25.0 A   1.7 kW',8,600,'#151a14');
+        for(let i=0;i<4;i++)s+=`<circle cx="${cx-36+i*24}" cy="${y+108}" r="6" fill="#2f5fb3" stroke="#1b3a73"/>`;}
+      else s+=`<rect x="${x+8}" y="${y+50}" width="56" height="27" rx="2" fill="#1c0f0e" stroke="#000"/>`+T_(cx,y+69,p.kind==='Amperímetro'?'12.4A':'221V',13,700,'#ff4a36');
+      s+=T_(cx,y+126,p.kind.toUpperCase(),5.5,700,'#444');return s+tagBelow(x,y,w,p.label)}},
+  pilot:{name:'Luz piloto',w:()=>1,props:{color:['Rojo','Verde','Ámbar','Azul']},def:{color:'Rojo'},
+    desc:p=>`Luz piloto LED ${p.color.toLowerCase()} 230 V`,short:p=>`Piloto ${p.color.toLowerCase()}`,
+    draw(x,y,p){const cx=x+18,cy=y+84;let s=base(x,y,1);
+      s+=`<circle cx="${cx}" cy="${cy}" r="12.5" fill="#1e2124"/><circle cx="${cx}" cy="${cy}" r="10" fill="${LAMP[p.color]}"/><circle cx="${cx}" cy="${cy}" r="10" fill="url(#gGloss)"/>`+T_(cx,y+122,'230V',6,600,'#333');return s+tagBelow(x,y,U,p.label)}},
+  born:{name:'Borneras',w:()=>1,props:{color:['Fase','Neutro','Tierra']},def:{color:'Neutro'},
+    desc:p=>`Borne para riel DIN ${p.color.toLowerCase()} (x3)`,short:p=>`Bornes ${p.color.toLowerCase()}`,
+    terms(x,y){const o=[];for(let i=0;i<3;i++){o.push({k:'t'+i,x:x+6+i*12,y:y+32,dir:-1},{k:'b'+i,x:x+6+i*12,y:y+DH-32,dir:1})}return o},
+    draw(x,y,p){const col={Fase:'#8e959b',Neutro:'#3b72c4',Tierra:'url(#pPE)'}[p.color],lt={Fase:'L',Neutro:'N',Tierra:'PE'}[p.color];let s='';
+      for(let i=0;i<3;i++){const sx=x+i*12;s+=`<rect x="${sx+.6}" y="${y+14}" width="10.8" height="${DH-28}" rx="2" fill="${col}" stroke="rgba(0,0,0,.45)" stroke-width=".7"/>`+screw(sx+6,y+32,4.3)+screw(sx+6,y+DH-32,4.3);
+        s+=p.color==='Tierra'?`<rect x="${sx+1.5}" y="${y+84}" width="9" height="12" rx="1" fill="#fff"/>`+T_(sx+6,y+92.5,'PE',4.6,700,'#111'):T_(sx+6,y+94,lt,7,700,'#fff')}
+      return s+tagBelow(x,y,U,p.label)}},
+  tomadin:{name:'Toma para riel',w:()=>3,tn:()=>2,props:{},def:{},
+    desc:()=>`Tomacorriente para riel DIN 10 A (IRAM 2071)`,short:()=>'Toma riel',
+    draw(x,y,p){const cx=x+54,cy=y+86;let s=base(x,y,3,{tn:2});
+      s+=`<circle cx="${cx}" cy="${cy}" r="30" fill="#f1f2ee" stroke="rgba(0,0,0,.28)"/><circle cx="${cx}" cy="${cy}" r="25" fill="#e1e3de"/>`;
+      s+=`<rect x="-2" y="-7" width="4" height="13" rx="1" fill="#25282a" transform="translate(${cx-8} ${cy-7}) rotate(30)"/><rect x="-2" y="-7" width="4" height="13" rx="1" fill="#25282a" transform="translate(${cx+8} ${cy-7}) rotate(-30)"/><rect x="${cx-2}" y="${cy+5}" width="4" height="12" rx="1" fill="#25282a"/>`;
+      return s+T_(cx,y+131,'10A 250V',6.5,600,'#333')+tagBelow(x,y,108,p.label)}},
+  res:{name:'Reserva',w:p=>+p.mods,terms:()=>[],props:{mods:['1','2','3','4','6']},def:{mods:'1'},desc:null,short:p=>`Reserva ${p.mods} mód.`,
+    draw(x,y,p){const w=+p.mods*U,cx=x+w/2,cy=y+DH/2;let s=`<rect x="${x+3}" y="${y+2}" width="${w-6}" height="${DH-4}" rx="4" fill="rgba(0,0,0,.03)" stroke="rgba(30,34,37,.35)" stroke-dasharray="5 4"/>`;
+      return s+(w<60?`<text x="${cx}" y="${cy+3}" font-size="7" font-weight="700" fill="#8a8f92" text-anchor="middle" font-family="${MONO}" transform="rotate(-90 ${cx} ${cy})">RESERVA</text>`:T_(cx,cy+3,'RESERVA',7,700,'#8a8f92'))}}
+};
+const PL={poles:'Polos',curve:'Curva',amp:'Corriente nominal (A)',ka:'Poder de corte',sens:'Sensibilidad',kA:'Corriente máxima',contacts:'Contactos',kind:'Tipo',color:'Color / uso',mods:'Módulos'};
+const PAL=[
+  {g:'Protección',items:[['term',{poles:'1'},'Térmica 1P'],['term',{poles:'2'},'Térmica 2P'],['term',{poles:'3'},'Térmica 3P'],['term',{poles:'4'},'Térmica 4P'],['dif',{poles:'2'},'Diferencial 2P'],['dif',{poles:'4'},'Diferencial 4P'],['ptens',{},'Prot. tensión'],['dps',{},'Sobretensión'],['fus',{},'Portafusible']]},
+  {g:'Distribución',items:[['bdist',{},'Bornera distrib.'],['bdist',{color:'Tierra'},'Bornera tierra'],['born',{color:'Fase'},'Bornes fase'],['born',{color:'Neutro'},'Bornes neutro'],['born',{color:'Tierra'},'Bornes tierra'],['res',{mods:'1'},'Reserva']]},
+  {g:'Maniobra y medición',items:[['cont',{},'Contactor'],['rele',{},'Telerruptor'],['timer',{kind:'Digital'},'Reloj digital'],['timer',{kind:'Analógico'},'Reloj analógico'],['volt',{kind:'Voltímetro'},'Voltímetro'],['volt',{kind:'Multimedidor'},'Multimedidor'],['pilot',{color:'Rojo'},'Piloto rojo'],['pilot',{color:'Verde'},'Piloto verde'],['tomadin',{},'Toma riel']]},
+  {g:'Salidas',items:[['SEC',{},'Nueva salida']]}
+];
+const wOf=it=>TYPES[it.t].w(it.p);
+
+/* ---------------- sectors (outputs) ---------------- */
+const ICONS={
+  luz:{n:'Iluminación',d:(x,y)=>`<circle cx="${x}" cy="${y-3}" r="7.5" fill="none" stroke="#161616" stroke-width="2.2"/><rect x="${x-4}" y="${y+5}" width="8" height="6" rx="1" fill="#161616"/>${[[0,-15,0,-12],[-11,-11,-9,-9],[11,-11,9,-9],[-14,-3,-11,-3],[14,-3,11,-3]].map(([a,b,c,d])=>`<line x1="${x+a}" y1="${y+b}" x2="${x+c}" y2="${y+d}" stroke="#161616" stroke-width="2" stroke-linecap="round"/>`).join('')}`},
+  toma:{n:'Tomas',d:(x,y)=>`<g transform="rotate(-35 ${x} ${y})"><rect x="${x-7}" y="${y-6}" width="14" height="12" rx="2" fill="#161616"/><rect x="${x-5}" y="${y-13}" width="3" height="8" fill="#161616"/><rect x="${x+2}" y="${y-13}" width="3" height="8" fill="#161616"/><path d="M${x} ${y+6}V${y+14}" stroke="#161616" stroke-width="3" stroke-linecap="round"/></g>`},
+  aire:{n:'Aire acondicionado',d:(x,y)=>`<rect x="${x-13}" y="${y-12}" width="26" height="11" rx="2.5" fill="none" stroke="#161616" stroke-width="2.2"/><line x1="${x-9}" y1="${y-4}" x2="${x+9}" y2="${y-4}" stroke="#161616" stroke-width="1.5"/>${[-8,-3,2,7].map(o=>`<path d="M${x+o} ${y+2}q2 3 0 6q-2 3 0 6" fill="none" stroke="#161616" stroke-width="1.8" stroke-linecap="round"/>`).join('')}`},
+  tierra:{n:'Tierra',d:(x,y)=>`<path d="M${x} ${y-13}V${y}M${x-11} ${y}H${x+11}M${x-7} ${y+5}H${x+7}M${x-3} ${y+10}H${x+3}" stroke="#161616" stroke-width="2.4" stroke-linecap="round"/>`},
+  bomba:{n:'Bomba',d:(x,y)=>`<path d="M${x} ${y-13}C${x+8} ${y-3} ${x+10} ${y+2} ${x+10} ${y+4}a10 10 0 0 1-20 0c0-2 2-7 10-17z" fill="#161616"/><path d="M${x-4} ${y+3}a4 4 0 0 0 4 4" stroke="#fff" stroke-width="1.6" fill="none"/>`},
+  cocina:{n:'Cocina / horno',d:(x,y)=>`<rect x="${x-12}" y="${y-12}" width="24" height="24" rx="3" fill="none" stroke="#161616" stroke-width="2.2"/>${[[-5,-5],[5,-5],[-5,5],[5,5]].map(([a,b])=>`<circle cx="${x+a}" cy="${y+b}" r="3.2" fill="none" stroke="#161616" stroke-width="1.8"/>`).join('')}`},
+  termo:{n:'Termotanque',d:(x,y)=>`<rect x="${x-8}" y="${y-14}" width="16" height="26" rx="6" fill="none" stroke="#161616" stroke-width="2.2"/><path d="M${x} ${y-8}V${y+4}" stroke="#d63a2c" stroke-width="2.4" stroke-linecap="round"/><circle cx="${x}" cy="${y+5}" r="2.8" fill="#d63a2c"/>`},
+  porton:{n:'Portón',d:(x,y)=>`<rect x="${x-13}" y="${y-11}" width="26" height="22" rx="1.5" fill="none" stroke="#161616" stroke-width="2.2"/>${[-6,0,6].map(o=>`<line x1="${x+o}" y1="${y-11}" x2="${x+o}" y2="${y+11}" stroke="#161616" stroke-width="1.8"/>`).join('')}`},
+  motor:{n:'Motor',d:(x,y)=>`<circle cx="${x}" cy="${y}" r="12" fill="none" stroke="#161616" stroke-width="2.2"/>`+T_(x,y+4.5,'M',12,700,'#161616','middle',SANS)},
+  otro:{n:'Otro',d:(x,y)=>`<path d="M${x+3} ${y-14}L${x-8} ${y+2}h7l-3 12 11-16h-7z" fill="#161616"/>`}
+};
+const iconSvg=k=>`<svg viewBox="-16 -16 32 32" aria-hidden="true">${ICONS[k].d(0,0)}</svg>`;
+
+/* ---------------- cables ---------------- */
+const COLS={L:{n:'Rojo (fase)',c:'#d8322c',o:'#8e1c18'},M:{n:'Marrón (fase)',c:'#7b4a24',o:'#4a2b12'},K:{n:'Negro (fase)',c:'#2a2c2f',o:'#000'},N:{n:'Azul (neutro)',c:'#2463c9',o:'#153d80'},C:{n:'Celeste (neutro)',c:'#44aee6',o:'#1f6f99'},PE:{n:'Verde-amarillo (tierra)',c:'#3ea34f',o:'#1f6a2c'}};
+const SECS=['1','1.5','2.5','4','6','10','16'];
+const IZ={'1':11,'1.5':15,'2.5':21,'4':28,'6':36,'10':50,'16':66};
+const fmtSec=s=>String(s).replace('.',',')+' mm²';
+let SHOWSEC=true;
+function genDev(){const t=S.items.filter(i=>i.t==='term');return t.find(i=>+i.p.poles>=2&&/general|principal/i.test(i.p.label||''))||t.find(i=>+i.p.poles>=2&&i.rail===0&&i.slot===0)||null}
+function pickSec(I,min){for(const s of SECS){if(+s<min)continue;if(IZ[s]>=I)return s}return SECS[SECS.length-1]}
+function recSec(c,depth){
+  const ends=[c.a,c.b],devs=ends.map(e=>e.k==='dev'?byId(e.id):null),g=genDev();
+  let lbl='';for(const e of ends)if(e.k==='sec'){const s=S.sectors.find(x=>x.id===e.id);if(s)lbl+=' '+s.name+' '+s.icon}
+  devs.forEach((d,i)=>{if(d&&d.t==='term'&&ends[i].term[0]==='b')lbl+=' '+(d.p.label||'')});lbl=lbl.toLowerCase();
+  if(c.col==='PE'){if(depth)return'2.5';let m=2.5;const sk=ends.filter(e=>e.k==='sec').map(ekey);
+    for(const o of S.cables){if(o===c||o.col==='PE')continue;if(sk.length&&[o.a,o.b].some(e=>sk.includes(ekey(e))))m=Math.max(m,+recSec(o,1))}
+    if(ends.some(e=>e.k==='in'))m=Math.max(m,+pickSec(g?+g.p.amp:25,4));return pickSec(0,Math.min(m,16))}
+  let I=0,min=/ilum|luz/.test(lbl)?1.5:2.5;
+  ends.forEach((e,i)=>{const d=devs[i];if(d&&d.t==='term'&&e.term[0]==='b')I=Math.max(I,+d.p.amp)});
+  if(ends.some(e=>e.k==='in')){I=Math.max(I,g?+g.p.amp:25);min=4}
+  if(!I)I=g?+g.p.amp:Math.max(16,...devs.filter(d=>d&&(d.t==='term'||d.t==='dif')).map(d=>+d.p.amp));
+  return pickSec(I,min)}
+
+/* ---------------- state ---------------- */
+const KEY='tablerista.v3';
+function sample(){
+  const D=(id,t,rail,slot,p)=>({id,t,rail,slot,p:Object.assign({},TYPES[t].def,p)});
+  const items=[D('tg','term',0,0,{amp:'32',label:'Térmica general'}),D('pt','ptens',0,2,{label:'Protector de tensión'}),D('rs','res',0,4,{mods:'1'}),D('bd','bdist',0,5,{label:'Bornera de distribución'}),D('vm','volt',0,9,{label:'Tensión de red'}),D('bt','born',0,11,{color:'Tierra',label:'Tierra'}),
+    D('d1','dif',1,0,{label:'Diferencial aire acond.'}),D('a1','term',1,2,{amp:'16',label:'Aire acond. piso 1'}),D('a2','term',1,4,{amp:'16',label:'Aire acond. piso 2'}),D('d2','dif',1,6,{label:'Diferencial piso 1'}),D('il','term',1,8,{amp:'10',label:'Iluminación piso 1'}),D('to','term',1,10,{amp:'16',label:'Tomas piso 1'})];
+  const sectors=[{id:'s1',name:'Aire piso 1',icon:'aire'},{id:'s2',name:'Aire piso 2',icon:'aire'},{id:'s3',name:'Iluminación piso 1',icon:'luz'},{id:'s4',name:'Tomas piso 1',icon:'toma'},{id:'s5',name:'Puesta a tierra',icon:'tierra'}];
+  const d=(id,term)=>({k:'dev',id,term}),sc=id=>({k:'sec',id}),IN={k:'in'};
+  let n=0;const C=(a,b,col,lane,pts,o={})=>({id:'c'+(++n),a,b,col,lane,pts:pts||[],dash:!!o.dash,sec:o.sec||(col==='PE'?'2.5':'6')});
+  const cables=[
+    C(IN,d('tg','t0'),'L',1,[],{sec:'6'}),C(IN,d('tg','t1'),'N',2,[],{sec:'6'}),C(IN,d('bt','t0'),'PE',0,[],{sec:'6'}),
+    C(d('tg','b0'),d('pt','t0'),'L',0,[{x:32,y:108}],{sec:'6'}),C(d('tg','b1'),d('pt','t1'),'N',1,[{x:40,y:113}],{sec:'6'}),
+    C(d('pt','b0'),d('bd','d0'),'L',0,[],{sec:'6'}),C(d('pt','b1'),d('bd','u0'),'N',1,[{x:204,y:110}],{sec:'6'}),
+    C(d('bd','d1'),d('d1','t0'),'L',2),C(d('bd','u1'),d('d1','t1'),'N',2,[{x:212,y:386}]),
+    C(d('bd','d2'),d('d2','t0'),'L',0),C(d('bd','u2'),d('d2','t1'),'N',1,[{x:220,y:393}]),
+    C(d('d1','b0'),d('a1','t0'),'L',0,[{x:30,y:384}]),C(d('d1','b1'),d('a1','t1'),'N',1,[{x:40,y:393}]),
+    C(d('a1','t0'),d('a2','t0'),'L',0),C(d('a1','t1'),d('a2','t1'),'N',1),
+    C(d('d2','b0'),d('il','t0'),'L',0,[{x:502,y:384}]),C(d('d2','b1'),d('il','t1'),'N',1,[{x:494,y:393}]),
+    C(d('il','t0'),d('to','t0'),'L',0),C(d('il','t1'),d('to','t1'),'N',1),
+    C(d('bt','b0'),sc('s5'),'PE',0,[{x:512,y:712}]),
+    C(d('a1','b0'),sc('s1'),'L',0,[],{dash:1,sec:'2.5'}),C(d('a1','b1'),sc('s1'),'N',1,[],{dash:1,sec:'2.5'}),
+    C(d('a2','b0'),sc('s2'),'L',2,[],{dash:1,sec:'2.5'}),C(d('a2','b1'),sc('s2'),'N',3,[],{dash:1,sec:'2.5'}),
+    C(d('il','b0'),sc('s3'),'L',4,[],{dash:1,sec:'1.5'}),C(d('il','b1'),sc('s3'),'N',5,[],{dash:1,sec:'1.5'}),
+    C(d('to','b0'),sc('s4'),'L',6,[],{dash:1,sec:'2.5'}),C(d('to','b1'),sc('s4'),'N',7,[],{dash:1,sec:'2.5'})];
+  return{name:'Tablero seccional – Piso 1',rails:2,mods:12,items,sectors,cables};
+}
+function load(){try{const v=JSON.parse(localStorage.getItem(KEY));if(v&&Array.isArray(v.items))return fix(v)}catch(e){}return sample()}
+function fix(v){v.sectors=v.sectors||[];v.cables=v.cables||[];v.items=v.items.filter(i=>TYPES[i.t]);return v}
+function save(){if(VIEW)return;try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+let VIEW=null;
+let S=load(),sel=null,armed=null,moveMode=false,mode='move',draft=null,zoom=matchMedia('(max-width:980px)').matches?1.4:1,hist=[],fut=[];
+let cCol='L',cDash=false,cSec='auto';
+function commit(){hist.push(JSON.stringify(S));if(hist.length>80)hist.shift();fut=[]}
+function undo(){if(!hist.length)return;fut.push(JSON.stringify(S));S=JSON.parse(hist.pop());sel=null;draft=null;moveMode=false;refresh()}
+function redo(){if(!fut.length)return;hist.push(JSON.stringify(S));S=JSON.parse(fut.pop());sel=null;draft=null;refresh()}
+const byId=id=>S.items.find(i=>i.id===id);
+
+/* ---------------- geometry ---------------- */
+const dims=()=>({W:S.mods*U+2*SIDE,H:TOP+(S.rails-1)*PITCH+DH+BOTZ+GZ});
+const rowY=r=>TOP+r*PITCH;
+const glandTop=()=>dims().H-GZ+22;
+const INX=74,INY=70;
+const railAt=y=>{const r=Math.floor((y-(TOP-50))/PITCH);return r>=0&&r<S.rails?r:-1};
+function free(rail,s,w,ign){if(s<0||s+w>S.mods)return false;return!S.items.some(i=>i.id!==ign&&i.rail===rail&&s<i.slot+wOf(i)&&i.slot<s+w)}
+function nearest(rail,s,w,ign){for(let d=0;d<=S.mods;d++){if(free(rail,s-d,w,ign))return s-d;if(free(rail,s+d,w,ign))return s+d}return-1}
+const startAt=(x,w)=>Math.max(0,Math.min(S.mods-w,Math.round((x-SIDE)/U-w/2)));
+function secX(i){const {W}=dims(),n=S.sectors.length,sp=Math.min(86,(W-2*SIDE)/Math.max(n,1));return W/2-sp*(n-1)/2+i*sp}
+function termsOf(it){const T=TYPES[it.t],x=SIDE+it.slot*U,y=rowY(it.rail);if(T.terms)return T.terms(x,y,it.p);
+  const n=wOf(it),tn=T.tn?T.tn(it.p):n,w=n*U,o=[];for(let i=0;i<tn;i++){const cx=x+(w/tn)*(i+.5);o.push({k:'t'+i,x:cx,y:y+20,dir:-1},{k:'b'+i,x:cx,y:y+DH-20,dir:1})}return o}
+const ekey=e=>e.k==='dev'?'dev:'+e.id+':'+e.term:e.k==='sec'?'sec:'+e.id:e.k==='in'?'in':'pt';
+function fan(e,c){const k=ekey(e),L=S.cables.filter(x=>ekey(x.a)===k||ekey(x.b)===k);let i=L.indexOf(c);if(i<0){i=L.length}const m=Math.max(L.length,i+1);return(i-(m-1)/2)*6}
+function endPos(e,c){
+  if(e.k==='dev'){const it=byId(e.id);if(!it)return null;const t=termsOf(it).find(t=>t.k===e.term);return t?{x:t.x,y:t.y,dir:t.dir,kind:'dev',row:it.rail}:null}
+  if(e.k==='sec'){const i=S.sectors.findIndex(s=>s.id===e.id);return i<0?null:{x:secX(i)+fan(e,c),y:glandTop(),dir:-1,kind:'sec'}}
+  if(e.k==='in')return{x:INX+fan(e,c),y:INY,dir:1,kind:'in'};
+  return{x:e.x,y:e.y,dir:0,kind:'pt'}}
+function exitY(P,lane){if(P.kind==='sec')return P.y-18;if(P.kind==='in')return P.y+22+lane*LANE;return P.dir<0?rowY(P.row)-30-lane*LANE:rowY(P.row)+DH+34+lane*LANE}
+function routePts(A,B,pts,lane){
+  const out=[A];let cur=A;if(A.dir){cur={x:A.x,y:exitY(A,lane)};out.push(cur)}
+  for(const w of pts||[]){out.push({x:w.x,y:cur.y},w);cur=w}
+  const e1=B.dir?{x:B.x,y:exitY(B,lane)}:B;out.push({x:e1.x,y:cur.y},e1);if(B.dir)out.push(B);return out}
+function pathOf(P,r=9){
+  const Q=[];for(const p of P){const l=Q[Q.length-1];if(l&&Math.abs(l.x-p.x)<.5&&Math.abs(l.y-p.y)<.5)continue;Q.push(p)}
+  for(let i=1;i<Q.length-1;){const a=Q[i-1],b=Q[i],c=Q[i+1];if((Math.abs(a.x-b.x)<.5&&Math.abs(b.x-c.x)<.5)||(Math.abs(a.y-b.y)<.5&&Math.abs(b.y-c.y)<.5))Q.splice(i,1);else i++}
+  let d=`M${f1(Q[0].x)} ${f1(Q[0].y)}`,len=0;
+  for(let i=1;i<Q.length;i++){const p=Q[i],a=Q[i-1];len+=Math.hypot(p.x-a.x,p.y-a.y);
+    if(i<Q.length-1){const n=Q[i+1],l1=Math.hypot(p.x-a.x,p.y-a.y)||1,l2=Math.hypot(n.x-p.x,n.y-p.y)||1,rr=Math.min(r,l1/2,l2/2);
+      d+=` L${f1(p.x-(p.x-a.x)/l1*rr)} ${f1(p.y-(p.y-a.y)/l1*rr)} Q${f1(p.x)} ${f1(p.y)} ${f1(p.x+(n.x-p.x)/l2*rr)} ${f1(p.y+(n.y-p.y)/l2*rr)}`}
+    else d+=` L${f1(p.x)} ${f1(p.y)}`}
+  return{d,len}}
+const near=(a,b)=>Math.abs(a-b)<.5;
+function clean(P){const Q=[];for(const p of P){const l=Q[Q.length-1];if(l&&near(l.x,p.x)&&near(l.y,p.y))continue;Q.push({x:p.x,y:p.y,dir:p.dir,kind:p.kind})}
+  for(let i=1;i<Q.length-1;){const a=Q[i-1],b=Q[i],c=Q[i+1];if((near(a.x,b.x)&&near(b.x,c.x))||(near(a.y,b.y)&&near(b.y,c.y)))Q.splice(i,1);else i++}return Q}
+function ortho(P){const out=[P[0]];
+  for(let i=1;i<P.length;i++){const p=out[out.length-1],q=P[i];
+    if(!near(p.x,q.x)&&!near(p.y,q.y)){let vf;
+      if(out.length===1)vf=!!P[0].dir;else{const pp=out[out.length-2];vf=!near(pp.x,p.x)}
+      if(i===P.length-1&&q.dir&&out.length>1)vf=false;
+      out.push(vf?{x:p.x,y:q.y}:{x:q.x,y:p.y})}
+    out.push(q)}
+  return out}
+function cableFull(c){const A=endPos(c.a,c),B=endPos(c.b,c);if(!A||!B)return null;
+  if(!c.route||!c.route.length)return clean(near(A.x,B.x)?[A,B]:routePts(A,B,[],0));
+  return clean(ortho([A,...c.route.map(p=>({x:p.x,y:p.y})),B]))}
+function cableGeom(c){const F=cableFull(c);if(!F)return null;return Object.assign(pathOf(F),{A:F[0],B:F[F.length-1],full:F})}
+function autoLane(a){const P=endPos(a,null);if(!P||!P.dir)return 0;const ys=[];
+  for(const c of S.cables){const F=cableFull(c);if(F)F.forEach(p=>ys.push(p.y))}
+  for(let l=0;l<10;l++){const y=exitY(P,l);if(!ys.some(v=>Math.abs(v-y)<2))return l}return 0}
+function migrate(){for(const c of S.cables){if(c.route)continue;const A=endPos(c.a,c),B=endPos(c.b,c);if(!A||!B)continue;
+  c.route=clean(routePts(A,B,c.pts||[],c.lane||0)).slice(1,-1).map(p=>({x:p.x,y:p.y}));delete c.pts;delete c.lane}}
+function wireSvg(d,col,dash,op){const C=COLS[col]||COLS.L,da=dash?' stroke-dasharray="11 7"':'';
+  let s=`<path d="${d}" fill="none" stroke="${C.o}" stroke-width="6.6" stroke-linecap="round" stroke-linejoin="round"${da}${op?` opacity="${op}"`:''}/><path d="${d}" fill="none" stroke="${C.c}" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"${da}${op?` opacity="${op}"`:''}/>`;
+  if(col==='PE'&&!dash)s+=`<path d="${d}" fill="none" stroke="#f0d020" stroke-width="4.6" stroke-dasharray="6 8" stroke-linejoin="round"${op?` opacity="${op}"`:''}/>`;
+  return s+`<path d="${d}" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.1" stroke-linejoin="round" transform="translate(-.8 -.8)"${da}/>`}
+function autoLaneOld(){return 0}
+
+function numbering(){const list=S.items.filter(i=>i.t!=='res'&&i.t!=='born'&&i.t!=='bdist').sort((a,b)=>a.rail-b.rail||a.slot-b.slot);const m={};list.forEach((it,k)=>m[it.id]=k+1);return{list,m}}
+
+/* ---------------- panel render ---------------- */
+function gland(x,y){let s=`<rect x="${f1(x-14)}" y="${y}" width="28" height="9" rx="2" fill="#62676b"/>`;for(let k=0;k<4;k++)s+=`<rect x="${f1(x-12.5)}" y="${y+9+k*8.5}" width="25" height="8" rx="3.5" fill="url(#gGland)" stroke="rgba(0,0,0,.3)" stroke-width=".6"/>`;return s+`<rect x="${f1(x-9)}" y="${y+43}" width="18" height="5" rx="2" fill="#555a5e"/>`}
+function baseMarkup(){
+  const {W,H}=dims();let s=`<rect x="0" y="0" width="${W}" height="${H}" rx="14" fill="url(#gEnc)"/><rect x="5" y="5" width="${W-10}" height="${H-10}" rx="11" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.5"/>`;
+  s+=`<rect x="14" y="14" width="${W-28}" height="${H-28}" rx="6" fill="url(#gPlate)" stroke="rgba(0,0,0,.18)"/>`;
+  for(const [hx,hy] of [[24,24],[W-24,24],[24,H-24],[W-24,H-24]])s+=screw(hx,hy,4.5);
+  const tw=Math.min(250,W-200);if(tw>80){const nm=(S.name||'Tablero').toUpperCase().slice(0,Math.floor(tw/6.3));s+=`<rect x="${W/2-tw/2}" y="24" width="${tw}" height="26" rx="3" fill="#fbfbf8" stroke="#9aa0a3"/>`+T_(W/2,41,nm,9.5,700,'#1a1d20','middle',SANS)}
+  s+=`<g transform="translate(0 ${INY}) scale(1 -1)">${gland(INX,0)}</g>`+T_(INX+20,40,'ENTRADA',7,700,'#51565a','start',SANS)+T_(INX+20,50,'L · N · PE',6.5,600,'#7a8084','start');
+  for(let r=0;r<S.rails;r++){const ry=rowY(r)+55;
+    s+=`<rect x="22" y="${ry}" width="${W-44}" height="70" fill="url(#gRail)" stroke="rgba(0,0,0,.22)"/><line x1="22" y1="${ry+9}" x2="${W-22}" y2="${ry+9}" stroke="rgba(0,0,0,.2)"/><line x1="22" y1="${ry+61}" x2="${W-22}" y2="${ry+61}" stroke="rgba(0,0,0,.2)"/>`;
+    for(let k=44;k<W-50;k+=46)s+=`<rect x="${k}" y="${ry+31.5}" width="24" height="7" rx="3.5" fill="#868c8d"/>`;
+    s+=screw(30,ry+35,4.5)+screw(W-30,ry+35,4.5);}
+  const gy=glandTop(),sp=Math.min(86,(W-2*SIDE)/Math.max(S.sectors.length,1));
+  S.sectors.forEach((sc,i)=>{const x=secX(i),mc=Math.max(4,Math.floor(sp/5.2)),sl=sel&&sel.k==='sec'&&sel.id===sc.id;
+    s+=`<g data-sec="${sc.id}">`+gland(x,gy)+`<rect x="${f1(x-15)}" y="${gy+54}" width="30" height="22" rx="3" fill="#fdfdfb" stroke="#2b2f33" stroke-width="1.2"/>`+T_(x,gy+70,String(i+1),12,700,'#1a1d20','middle',SANS);
+    s+=`<g transform="translate(${f1(x)} ${gy+96}) scale(.95)">${(ICONS[sc.icon]||ICONS.otro).d(0,0)}</g>`;
+    const nm=sc.name.length>mc?sc.name.slice(0,mc-1)+'…':sc.name;s+=T_(x,gy+123,nm,7.4,600,'#2b2f33','middle',SANS);
+    s+=`<rect x="${f1(x-sp/2+3)}" y="${gy-4}" width="${f1(sp-6)}" height="134" fill="transparent" rx="6"${sl?' stroke="#f5c518" stroke-width="2.5"':''}/></g>`});
+  return s}
+function devMarkup(ex){let s='';
+  for(const it of S.items){const x=SIDE+it.slot*U,y=rowY(it.rail);s+=`<g class="dev" data-id="${it.id}"${it.t!=='res'?' filter="url(#fSh)"':''}>${TYPES[it.t].draw(x,y,it.p)}</g>`}
+  return s}
+function cableMarkup(ex){let s='',hit='';
+  for(const c of S.cables){const g=cableGeom(c);if(!g)continue;const on=!ex&&sel&&sel.k==='cable'&&sel.id===c.id;
+    if(on)s+=`<path d="${g.d}" fill="none" stroke="#f5c518" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>`;
+    s+=wireSvg(g.d,c.col,c.dash);
+    for(const P of [g.A,g.B])if(P.kind==='dev')s+=`<rect x="${f1(P.x-3.5)}" y="${f1(P.y-(P.dir<0?4:6))}" width="7" height="10" rx="1.5" fill="#c9ccce" stroke="#6b7073" stroke-width=".6"/>`;
+    if(!ex&&mode==='move'){hit+=`<path d="${g.d}" fill="none" stroke="transparent" stroke-width="16" data-cable="${c.id}" pointer-events="stroke"/>`;
+      if(on){const F=g.full;for(let k=0;k<F.length-1;k++){const p=F[k],q=F[k+1];if(Math.hypot(q.x-p.x,q.y-p.y)<16)continue;const mx=f1((p.x+q.x)/2),my=f1((p.y+q.y)/2),hz=near(p.y,q.y);
+        const ar=hz?`M${mx} ${my-5.5}V${my+5.5}M${mx-3} ${my-2.5}L${mx} ${my-5.5}L${mx+3} ${my-2.5}M${mx-3} ${my+2.5}L${mx} ${my+5.5}L${mx+3} ${my+2.5}`:`M${mx-5.5} ${my}H${mx+5.5}M${mx-2.5} ${my-3}L${mx-5.5} ${my}L${mx-2.5} ${my+3}M${mx+2.5} ${my-3}L${mx+5.5} ${my}L${mx+2.5} ${my+3}`;
+        hit+=`<g data-seg="${k}" data-cable="${c.id}"><circle cx="${mx}" cy="${my}" r="18" fill="transparent"/><circle cx="${mx}" cy="${my}" r="10" fill="#f5c518" stroke="#141004" stroke-width="2"/><path d="${ar}" fill="none" stroke="#141004" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></g>`}}}}
+  if(SHOWSEC)for(const c of S.cables){const g=cableGeom(c);if(!g)continue;const F=g.full;let bk=-1,bl=0;
+    for(let k=0;k<F.length-1;k++){const l=Math.hypot(F[k+1].x-F[k].x,F[k+1].y-F[k].y);if(l>bl){bl=l;bk=k}}
+    if(bk<0||bl<34)continue;const mx=(F[bk].x+F[bk+1].x)/2,my=(F[bk].y+F[bk+1].y)/2,r=recSec(c),low=+c.sec<+r,txt=fmtSec(c.sec)+(low?' → '+fmtSec(r):''),w=txt.length*4.7+10;
+    s+=`<g pointer-events="none"><rect x="${f1(mx-w/2)}" y="${f1(my-7.5)}" width="${f1(w)}" height="15" rx="7.5" fill="${low?'#ffe1db':'#ffffff'}" stroke="${low?'#d63a2c':(COLS[c.col]||COLS.L).o}" stroke-width="1.3"/>`+T_(mx,my+2.8,txt,7.8,700,low?'#b3261e':'#15181b')+`</g>`}
+  return s+hit}
+function markMarkup(){let s='';const {W}=dims();
+  for(const it of S.items)if(sel&&sel.k==='dev'&&sel.id===it.id){const x=SIDE+it.slot*U,y=rowY(it.rail),w=wOf(it)*U;s+=`<rect x="${x-3}" y="${y-8}" width="${w+6}" height="${DH+16}" rx="6" fill="none" stroke="#f5c518" stroke-width="3" pointer-events="none"/>`}
+  if(armed&&armed.t!=='SEC'||moveMode){for(let r=0;r<S.rails;r++)for(let k=0;k<S.mods;k++)if(free(r,k,1,moveMode&&sel?sel.id:null))s+=`<rect data-slot="${k}" x="${SIDE+k*U+3}" y="${rowY(r)+46}" width="${U-6}" height="88" rx="4" fill="rgba(245,197,24,.2)" stroke="#c99a00" stroke-dasharray="4 3"/>`}
+  if(mode==='cable'){const ring=(x,y,key,big)=>`<circle cx="${f1(x)}" cy="${f1(y)}" r="${big?11:9}" fill="rgba(245,197,24,${big?.55:.22})" stroke="#c99a00" stroke-width="1.6" data-end="${key}"/>`;
+    const dk=draft?ekey(draft.a):'';
+    for(const it of S.items)for(const t of termsOf(it)){const key=`dev|${it.id}|${t.k}`;s+=ring(t.x,t.y,key,dk===`dev:${it.id}:${t.k}`)}
+    S.sectors.forEach((sc,i)=>s+=ring(secX(i),glandTop()-2,`sec|${sc.id}`,dk==='sec:'+sc.id));
+    s+=ring(INX,INY+2,'in',dk==='in');}
+  return s}
+function panelMarkup(ex){return baseMarkup()+devMarkup(ex)+cableMarkup(ex)}
+const svg=$('#panel');
+function renderPanel(){const {W,H}=dims();svg.setAttribute('viewBox',`0 0 ${W} ${H}`);svg.style.width=(zoom*100)+'%';svg.style.minWidth=Math.round(W*.6*zoom)+'px';
+  svg.innerHTML=DEFS+`<g id="lBase">${baseMarkup()}</g><g id="lDev">${devMarkup()}</g><g id="lCab">${cableMarkup()}</g><g id="lMark">${markMarkup()}</g><g id="ov"></g>`}
+function renderCab(){const l=svg.querySelector('#lCab');if(l)l.innerHTML=cableMarkup()}
+function preview(rail,s,w,ok){const ov=svg.querySelector('#ov');if(!ov)return;ov.innerHTML=rail<0?'':`<rect x="${SIDE+s*U}" y="${rowY(rail)-4}" width="${w*U}" height="${DH+8}" rx="5" fill="${ok?'rgba(95,191,138,.25)':'rgba(229,105,92,.25)'}" stroke="${ok?'#3d9f68':'#d04a3c'}" stroke-width="2" stroke-dasharray="6 4" pointer-events="none"/>`}
+function drawDraft(){const ov=svg.querySelector('#ov');if(!ov)return;if(!draft){ov.innerHTML='';return}
+  const A=endPos(draft.a,null);if(!A){ov.innerHTML='';return}const pts=draft.pts.slice();if(draft.hov)pts.push(draft.hov);
+  if(!pts.length){ov.innerHTML='';return}
+  ov.innerHTML=wireSvg(pathOf(clean(ortho([A,...pts]))).d,cCol,cDash,.8)+draft.pts.map(p=>`<circle cx="${p.x}" cy="${p.y}" r="5" fill="#f5c518" stroke="#141004" stroke-width="1.5"/>`).join('')}
+
+/* ---------------- palette ---------------- */
+const mini=(t,p,h)=>{if(t==='SEC')return `<svg viewBox="-20 -8 40 124"${h?` height="${h}"`:''} aria-hidden="true">${gland(0,0)}<rect x="-15" y="54" width="30" height="22" rx="3" fill="#fdfdfb" stroke="#2b2f33"/>${T_(0,70,'+',14,700,'#1a1d20')}<g transform="translate(0 97)">${ICONS.luz.d(0,0).replace(/#161616/g,'#e8eaec')}</g></svg>`;
+  const P=Object.assign({},TYPES[t].def,p),w=TYPES[t].w(P)*U;return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 30 ${w+2} 116"${h?` height="${h}"`:''} aria-hidden="true">${TYPES[t].draw(0,0,P)}</svg>`};
+const palEl=$('#pal');
+palEl.innerHTML=PAL.map((g,gi)=>`<div class="grp"><h3>${g.g}</h3><div class="items">${g.items.map((it,ii)=>`<button class="pi" data-g="${gi}" data-i="${ii}">${mini(it[0],it[1])}<span>${it[2]}</span></button>`).join('')}</div></div>`).join('');
+const entryOf=b=>{const it=PAL[b.dataset.g].items[b.dataset.i];return{t:it[0],p:it[0]==='SEC'?{}:Object.assign({},TYPES[it[0]].def,it[1]),label:it[2],key:b.dataset.g+'-'+b.dataset.i}};
+function addSector(){commit();const s={id:uid(),name:'Nueva salida',icon:'otro'};S.sectors.push(s);sel={k:'sec',id:s.id};refresh();toast('Salida agregada: poné nombre e ícono')}
+function arm(e){if(e.t==='SEC'){addSector();return}if(armed&&armed.key===e.key)armed=null;else{armed=e;moveMode=false;sel=null;draft=null;setMode('move',true)}refresh()}
+
+/* ---------------- placement ---------------- */
+function placeNew(e,rail,x){const w=TYPES[e.t].w(e.p),s=nearest(rail,startAt(x,w),w,null);
+  if(s<0){toast(`No entra en la fila ${rail+1}: faltan ${w} módulos libres seguidos`);return}
+  commit();S.items.push({id:uid(),t:e.t,rail,slot:s,p:Object.assign({},e.p)});refresh()}
+function moveTo(id,rail,x){const it=byId(id);if(!it)return;const w=wOf(it),s=nearest(rail,startAt(x,w),w,id);
+  if(s<0){toast(`No hay lugar para ${w} módulos en la fila ${rail+1}`);return}if(s===it.slot&&rail===it.rail)return;commit();it.rail=rail;it.slot=s}
+const svgPt=e=>{const p=svg.createSVGPoint();p.x=e.clientX;p.y=e.clientY;return p.matrixTransform(svg.getScreenCTM().inverse())};
+const snap=p=>({x:Math.round(p.x/4)*4,y:Math.round(p.y/4)*4});
+
+const ghost=$('#ghost');let pd=null;
+palEl.addEventListener('pointerdown',e=>{const b=e.target.closest('.pi');if(!b)return;pd={b,x:e.clientX,y:e.clientY,drag:false,mouse:e.pointerType==='mouse',e:entryOf(b)}});
+const overSvg=e=>{const r=svg.getBoundingClientRect();return e.clientX>=r.left&&e.clientX<=r.right&&e.clientY>=r.top&&e.clientY<=r.bottom};
+window.addEventListener('pointermove',e=>{
+  if(!pd||pd.e.t==='SEC')return;const dx=e.clientX-pd.x,dy=e.clientY-pd.y;
+  if(!pd.drag){const d=Math.hypot(dx,dy);if(pd.mouse?d>5:(Math.abs(dy)>10&&Math.abs(dy)>Math.abs(dx)*1.2)){pd.drag=true;const sc=svg.getBoundingClientRect().width/dims().W;ghost.innerHTML=mini(pd.e.t,pd.e.p,Math.max(60,116*sc));ghost.hidden=false}}
+  if(pd.drag){e.preventDefault();const gr=ghost.getBoundingClientRect();ghost.style.transform=`translate(${e.clientX-gr.width/2}px,${e.clientY-gr.height/2}px)`;
+    if(overSvg(e)){const p=svgPt(e),r=railAt(p.y),w=TYPES[pd.e.t].w(pd.e.p);if(r<0)return preview(-1);const s=nearest(r,startAt(p.x,w),w,null);preview(r,s<0?startAt(p.x,w):s,w,s>=0)}else preview(-1)}
+},{passive:false});
+window.addEventListener('pointerup',e=>{if(!pd)return;const P=pd;pd=null;
+  if(P.drag){ghost.hidden=true;preview(-1);if(overSvg(e)){const p=svgPt(e),r=railAt(p.y);if(r>=0)placeNew(P.e,r,p.x)}}
+  else if(e.target.closest('.pi')===P.b)arm(P.e)});
+window.addEventListener('pointercancel',()=>{if(pd){ghost.hidden=true;preview(-1);pd=null}});
+
+/* ---------------- panel interaction ---------------- */
+svg.addEventListener('touchstart',e=>{if(VIEW)return;if(armed||mode==='cable'||moveMode||e.target.closest('.dev,[data-cable],[data-seg],[data-sec]'))e.preventDefault()},{passive:false});
+const parseEnd=s=>{const a=s.split('|');return a[0]==='dev'?{k:'dev',id:a[1],term:a[2]}:a[0]==='sec'?{k:'sec',id:a[1]}:{k:'in'}};
+let dd=null,sd=null;
+function nearestSeg(F,p){let best=0,bd=1e9;for(let k=0;k<F.length-1;k++){const a=F[k],b=F[k+1],dx=b.x-a.x,dy=b.y-a.y,L=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((p.x-a.x)*dx+(p.y-a.y)*dy)/L)),d=Math.hypot(a.x+t*dx-p.x,a.y+t*dy-p.y);if(d<bd){bd=d;best=k}}return best}
+function startSeg(c,k,splitAt){
+  const g=cableGeom(c);if(!g)return;const F=g.full.map(p=>({...p})),orig=JSON.stringify(c.route||null);
+  if(splitAt){const p=F[k],q=F[k+1],hz=near(p.y,q.y),lo=hz?Math.min(p.x,q.x):Math.min(p.y,q.y),hi=hz?Math.max(p.x,q.x):Math.max(p.y,q.y),a=Math.min(14,(hi-lo)/3);
+    if(a<3)return;const m=Math.max(lo+a,Math.min(hi-a,hz?splitAt.x:splitAt.y)),sg=hz?Math.sign(q.x-p.x):Math.sign(q.y-p.y);
+    const P1=hz?{x:m-a*sg,y:p.y}:{x:p.x,y:m-a*sg},P2=hz?{x:m+a*sg,y:p.y}:{x:p.x,y:m+a*sg};
+    F.splice(k+1,0,{...P1},{...P1},{...P2},{...P2});k+=2}
+  else{if(k===0){const A=F[0],s={x:A.x,y:A.y+(A.dir||1)*16};F.splice(1,0,{...s},{...s});k=2}
+    if(k+1===F.length-1){const B=F[F.length-1],s={x:B.x,y:B.y+(B.dir||1)*16};F.splice(F.length-1,0,{...s},{...s})}}
+  sd={c,F,k,hz:near(F[k].y,F[k+1].y),orig,moved:false}}
+svg.addEventListener('pointerdown',e=>{
+  if(e.button>0||VIEW)return;const p=svgPt(e),t=e.target;
+  if(armed){const r=railAt(p.y);if(r>=0)placeNew(armed,r,p.x);return}
+  if(mode==='cable'){const en=t.closest('[data-end]');
+    if(en){const E=parseEnd(en.dataset.end);
+      if(!draft){draft={a:E,pts:[],hov:null};refreshLight();return}
+      if(ekey(E)===ekey(draft.a)){if(!draft.pts.length){draft=null;refreshLight()}return}
+      finishDraft(E);return}
+    if(draft){draft.pts.push(snap(p));draft.hov=null;drawDraft();renderHint()}else toast('Tocá un tornillo (borne) para empezar el cable');return}
+  if(moveMode&&sel&&sel.k==='dev'){const r=railAt(p.y);if(r>=0){moveTo(sel.id,r,p.x);moveMode=false;refresh()}return}
+  const sg=t.closest('[data-seg]');if(sg){const c=S.cables.find(x=>x.id===sg.dataset.cable);if(c){startSeg(c,+sg.dataset.seg,null);try{svg.setPointerCapture(e.pointerId)}catch(_){}}return}
+  const g=t.closest('.dev');if(g){sel={k:'dev',id:g.dataset.id};renderPanel();renderInsp();renderHint();dd={id:g.dataset.id,p0:p,cx:e.clientX,cy:e.clientY,moved:false};try{svg.setPointerCapture(e.pointerId)}catch(_){}return}
+  const cb=t.closest('[data-cable]');if(cb){const c=S.cables.find(x=>x.id===cb.dataset.cable);
+    if(c&&sel&&sel.k==='cable'&&sel.id===c.id){const G=cableGeom(c);if(G){startSeg(c,nearestSeg(G.full,p),p);try{svg.setPointerCapture(e.pointerId)}catch(_){}}return}
+    sel={k:'cable',id:cb.dataset.cable};refresh();return}
+  const sc=t.closest('[data-sec]');if(sc){sel={k:'sec',id:sc.dataset.sec};refresh();return}
+  if(sel){sel=null;refresh()}
+});
+svg.addEventListener('pointermove',e=>{
+  if(mode==='cable'&&draft&&e.pointerType==='mouse'){draft.hov=snap(svgPt(e));drawDraft();return}
+  if(sd){const v=snap(svgPt(e));if(!sd.moved){commit();sd.moved=true}
+    if(sd.hz){sd.F[sd.k].y=v.y;sd.F[sd.k+1].y=v.y}else{sd.F[sd.k].x=v.x;sd.F[sd.k+1].x=v.x}
+    sd.c.route=sd.F.slice(1,-1).map(q=>({x:q.x,y:q.y}));renderCab();return}
+  if(!dd)return;if(!dd.moved&&Math.hypot(e.clientX-dd.cx,e.clientY-dd.cy)<5)return;dd.moved=true;
+  const it=byId(dd.id),p=svgPt(e),dx=p.x-dd.p0.x,dy=p.y-dd.p0.y,w=wOf(it);
+  const g=svg.querySelector(`.dev[data-id="${dd.id}"]`);if(g)g.setAttribute('transform',`translate(${f1(dx)} ${f1(dy)})`);
+  const cx=SIDE+it.slot*U+dx+w*U/2,r=railAt(rowY(it.rail)+DH/2+dy);if(r<0)return preview(-1);
+  const s=nearest(r,startAt(cx,w),w,it.id);preview(r,s<0?startAt(cx,w):s,w,s>=0)});
+function endDrag(e,cancel){
+  if(sd){const D=sd;sd=null;if(D.moved){if(cancel){D.c.route=JSON.parse(D.orig)}else{const F=cableFull(D.c);if(F)D.c.route=F.slice(1,-1).map(q=>({x:q.x,y:q.y}))}refresh()}return}
+  if(!dd)return;const D=dd;dd=null;
+  if(D.moved&&!cancel){const it=byId(D.id),p=svgPt(e),dx=p.x-D.p0.x,dy=p.y-D.p0.y,w=wOf(it),r=railAt(rowY(it.rail)+DH/2+dy);if(r>=0)moveTo(it.id,r,SIDE+it.slot*U+dx+w*U/2)}
+  refresh()}
+svg.addEventListener('pointerup',e=>endDrag(e,false));
+svg.addEventListener('pointercancel',e=>endDrag(e,true));
+svg.addEventListener('pointerleave',()=>{if(draft&&draft.hov){draft.hov=null;drawDraft()}});
+
+function finishDraft(E){commit();const c={id:uid(),a:draft.a,b:E,route:[],col:cCol,dash:cDash,sec:cSec==='auto'?'2.5':cSec};S.cables.push(c);if(cSec==='auto')c.sec=recSec(c);
+  const A=endPos(c.a,c),B=endPos(c.b,c);
+  const F=draft.pts.length?clean(ortho([A,...draft.pts,B])):clean(near(A.x,B.x)&&A.dir!==B.dir?[A,B]:routePts(A,B,[],autoLane(c.a)));
+  c.route=F.slice(1,-1).map(q=>({x:q.x,y:q.y}));draft=null;sel={k:'cable',id:c.id};setMode('move',true);refresh();toast('Cable listo: arrastrá los círculos amarillos para acomodar el recorrido')}
+function finishFree(){if(!draft||!draft.pts.length)return;const last=draft.pts.pop();finishDraft({k:'pt',x:last.x,y:last.y})}
+
+/* ---------------- inspector ---------------- */
+const insp=$('#insp');
+function renderInsp(){
+  const F=$('#ifields');let obj=null;
+  if(sel&&sel.k==='dev')obj=byId(sel.id);else if(sel&&sel.k==='cable')obj=S.cables.find(c=>c.id===sel.id);else if(sel&&sel.k==='sec')obj=S.sectors.find(s=>s.id===sel.id);
+  insp.classList.toggle('open',!!obj);
+  if(!obj){$('#iname').textContent='Propiedades';$('#iloc').textContent='';F.innerHTML=`<p class="empty">Tocá un dispositivo, un cable o una salida para editarlo.</p><p class="empty">Para cablear, pasá a <b>Cablear</b>, tocá un tornillo, tocá donde querés que doble y terminá en otro tornillo o en una salida.</p>`;return}
+  if(sel.k==='dev')return inspDev(obj,F);if(sel.k==='cable')return inspCable(obj,F);return inspSec(obj,F)}
+function inspDev(it,F){
+  const T=TYPES[it.t],w=wOf(it),n=numbering().m[it.id];
+  $('#iname').textContent=T.name;$('#iloc').textContent=`${n?'Circuito '+n+' · ':''}Fila ${it.rail+1} · mód. ${it.slot+1}${w>1?'–'+(it.slot+w):''}`;
+  let h=it.t==='res'?'':`<label class="f"><span>Nombre / etiqueta</span><input id="f_label" value="${esc(it.p.label||'')}" placeholder="Ej: Tomas cocina" maxlength="40" autocomplete="off"></label>`;
+  for(const k in T.props)h+=`<label class="f"><span>${PL[k]}</span><select id="f_${k}" data-k="${k}">${T.props[k].map(v=>`<option${v==it.p[k]?' selected':''}>${v}</option>`).join('')}</select></label>`;
+  h+=`<div class="row"><button class="btn" id="bDup">Duplicar</button><button class="btn" id="bMove">${moveMode?'Cancelar mover':'Mover'}</button><button class="btn danger" id="bDel">Eliminar</button></div>`;
+  F.innerHTML=h;
+  const li=$('#f_label');if(li){let cm=false;li.addEventListener('input',()=>{if(!cm){commit();cm=true}it.p.label=li.value;save();renderPanel();renderDocs()})}
+  F.querySelectorAll('select').forEach(sl=>sl.addEventListener('change',()=>{
+    const k=sl.dataset.k,np=Object.assign({},it.p,{[k]:sl.value}),nw=TYPES[it.t].w(np);let s=it.slot;
+    if(nw!==w&&!free(it.rail,s,nw,it.id)){s=nearest(it.rail,s,nw,it.id);if(s<0){toast(`No entra: la fila ${it.rail+1} no tiene ${nw} módulos libres seguidos`);sl.value=it.p[k];return}}
+    commit();it.p=np;it.slot=s;refresh()}));
+  $('#bDel').onclick=()=>{commit();S.items=S.items.filter(i=>i.id!==it.id);sel=null;moveMode=false;refresh();toast('Eliminado con sus cables · Deshacer lo recupera')};
+  $('#bMove').onclick=()=>{moveMode=!moveMode;armed=null;refresh()};
+  $('#bDup').onclick=()=>{let r=it.rail,s=nearest(r,it.slot+w,w,null);if(s<0)for(r=0;r<S.rails;r++){s=nearest(r,0,w,null);if(s>=0)break}
+    if(s<0){toast('No queda lugar libre en el tablero');return}commit();const c={id:uid(),t:it.t,rail:r,slot:s,p:JSON.parse(JSON.stringify(it.p))};S.items.push(c);sel={k:'dev',id:c.id};refresh()};
+}
+function endName(e){if(e.k==='in')return'Entrada';if(e.k==='pt')return'Punto libre';if(e.k==='sec'){const i=S.sectors.findIndex(s=>s.id===e.id);return`Salida ${i+1}`}
+  const it=byId(e.id);if(!it)return'?';const n=numbering().m[it.id];return`${it.p.label||TYPES[it.t].name}${n?' ('+n+')':''} · ${e.term[0]==='t'||e.term[0]==='u'?'arriba':'abajo'}`}
+function inspCable(c,F){
+  const g=cableGeom(c);$('#iname').textContent='Cable';$('#iloc').textContent=`${endName(c.a)} → ${endName(c.b)}${g?` · ≈ ${(g.len/2000).toFixed(2)} m`:''}`;
+  F.innerHTML=`<div class="f"><span>Color</span><div class="row">${Object.entries(COLS).map(([k,v])=>`<button class="chip${c.col===k?' on':''}" data-col="${k}" title="${v.n}" aria-label="${v.n}"><i style="background:${k==='PE'?'repeating-linear-gradient(45deg,#3ea34f 0 4px,#f0d020 4px 7px)':v.c}"></i></button>`).join('')}</div></div>
+  <label class="f"><span>Trazo</span><select id="f_dash"><option value="0"${!c.dash?' selected':''}>Continuo</option><option value="1"${c.dash?' selected':''}>Punteado</option></select></label>
+  <label class="f"><span>Sección (mm²)</span><select id="f_sec">${SECS.map(s=>`<option value="${s}"${s==c.sec?' selected':''}>${fmtSec(s)}</option>`).join('')}</select></label>
+  <p class="empty">Recomendada: <b>${fmtSec(recSec(c))}</b>${+c.sec<+recSec(c)?' · <b style="color:#ff9b8f">la actual es chica</b>':''} <button class="btn sm" id="useRec">Usar recomendada</button></p>
+  <div class="f"><span>Recorrido</span><div class="row"><button class="btn sm" id="rAuto">Recorrido automático</button></div></div>
+  <p class="empty">Arrastrá un <b>círculo amarillo</b> para mover ese tramo entero. Arrastrá desde <b>cualquier otro punto del cable</b> para sacar una curva nueva y rodear lo que quieras.</p>
+  <div class="row"><button class="btn danger" id="bDelC">Eliminar cable</button></div>`;
+  F.querySelectorAll('[data-col]').forEach(b=>b.onclick=()=>{commit();c.col=b.dataset.col;refresh()});
+  $('#f_dash').onchange=e=>{commit();c.dash=e.target.value==='1';refresh()};
+  $('#f_sec').onchange=e=>{commit();c.sec=e.target.value;refresh()};
+  $('#useRec').onclick=()=>{commit();c.sec=recSec(c);refresh();toast('Sección ajustada a '+fmtSec(c.sec))};
+  $('#rAuto').onclick=()=>{const A=endPos(c.a,c),B=endPos(c.b,c);if(!A||!B)return;commit();c.route=clean(routePts(A,B,[],0)).slice(1,-1).map(q=>({x:q.x,y:q.y}));refresh()};
+  $('#bDelC').onclick=()=>{commit();S.cables=S.cables.filter(x=>x.id!==c.id);sel=null;refresh()};
+}
+function inspSec(sc,F){
+  const i=S.sectors.indexOf(sc);$('#iname').textContent='Salida '+(i+1);$('#iloc').textContent=`${S.cables.filter(c=>ekey(c.a)==='sec:'+sc.id||ekey(c.b)==='sec:'+sc.id).length} cables conectados`;
+  F.innerHTML=`<label class="f"><span>Nombre del sector</span><input id="f_sname" value="${esc(sc.name)}" maxlength="32" autocomplete="off"></label>
+  <div class="f"><span>Ícono</span><div class="icons">${Object.keys(ICONS).map(k=>`<button class="${sc.icon===k?'on':''}" data-ic="${k}" title="${ICONS[k].n}" aria-label="${ICONS[k].n}">${iconSvg(k)}</button>`).join('')}</div></div>
+  <div class="row"><button class="btn sm" id="sL">← Mover</button><button class="btn sm" id="sR">Mover →</button><button class="btn danger sm" id="sDel">Eliminar salida</button></div>`;
+  let cm=false;$('#f_sname').addEventListener('input',e=>{if(!cm){commit();cm=true}sc.name=e.target.value;save();renderPanel();renderDocs()});
+  F.querySelectorAll('[data-ic]').forEach(b=>b.onclick=()=>{commit();sc.icon=b.dataset.ic;if(sc.name==='Nueva salida')sc.name=ICONS[b.dataset.ic].n;refresh()});
+  const mv=d=>{const j=i+d;if(j<0||j>=S.sectors.length)return;commit();S.sectors.splice(i,1);S.sectors.splice(j,0,sc);refresh()};
+  $('#sL').onclick=()=>mv(-1);$('#sR').onclick=()=>mv(1);
+  $('#sDel').onclick=()=>{commit();S.sectors=S.sectors.filter(s=>s!==sc);sel=null;refresh();toast('Salida eliminada con sus cables')};
+}
+$('#iclose').onclick=()=>{sel=null;moveMode=false;refresh()};
+
+/* ---------------- modes & hint ---------------- */
+const chips=$('#chips');chips.innerHTML=Object.entries(COLS).map(([k,v])=>`<button class="chip" data-c="${k}" title="${v.n}" aria-label="${v.n}"><i style="background:${k==='PE'?'repeating-linear-gradient(45deg,#3ea34f 0 4px,#f0d020 4px 7px)':v.c}"></i></button>`).join('');
+chips.onclick=e=>{const b=e.target.closest('[data-c]');if(!b)return;cCol=b.dataset.c;if(cCol==='PE')cSec=cSec;syncTools();drawDraft()};
+$('#cSec').innerHTML='<option value="auto">Automática</option>'+SECS.map(s=>`<option value="${s}">${fmtSec(s)}</option>`).join('');
+$('#bSecs').onclick=()=>{SHOWSEC=!SHOWSEC;$('#bSecs').classList.toggle('on',SHOWSEC);renderPanel();drawDraft()};
+$('#bAuto').onclick=()=>{const ch=S.cables.filter(c=>c.sec!==recSec(c));if(!ch.length){toast('Todos los cables ya tienen la medida recomendada');return}commit();ch.forEach(c=>c.sec=recSec(c));refresh();toast(`${ch.length} cable(s) ajustados a la medida recomendada`)};
+$('#cDash').onchange=e=>{cDash=e.target.value==='1';drawDraft()};$('#cSec').onchange=e=>cSec=e.target.value;
+function setMode(m,silent){mode=m;draft=null;moveMode=false;if(m==='cable'){armed=null;sel=null}if(!silent)refresh()}
+$('#mMove').onclick=()=>setMode('move');$('#mCable').onclick=()=>setMode('cable');
+function syncTools(){$('#mMove').classList.toggle('on',mode==='move');$('#mCable').classList.toggle('on',mode==='cable');$('#cabopts').hidden=mode!=='cable';
+  chips.querySelectorAll('.chip').forEach(b=>b.classList.toggle('on',b.dataset.c===cCol));$('#cDash').value=cDash?'1':'0';$('#cSec').value=cSec}
+const ZL=[1,1.4,1.9,2.6];$('#zIn').onclick=()=>{zoom=ZL[Math.min(ZL.length-1,ZL.indexOf(zoom)+1)];renderPanel()};$('#zOut').onclick=()=>{zoom=ZL[Math.max(0,ZL.indexOf(zoom)-1)];renderPanel()};
+function renderHint(){const h=$('#hint');h.className='hint act';
+  if(armed){h.innerHTML=`Colocando <b>${esc(armed.label)}</b>: tocá un lugar libre del riel (podés poner varios). <button class="btn sm" id="hA">Listo</button>`;$('#hA').onclick=()=>{armed=null;refresh()};return}
+  if(mode==='cable'){if(!draft){h.innerHTML=`Tocá el <b>tornillo</b> donde empieza el cable (o la entrada).`;return}
+    h.innerHTML=`Tocá donde querés que <b>doble</b> y terminá en otro tornillo o en una salida. <button class="btn sm" id="hU"${draft.pts.length?'':' disabled'}>Borrar último punto</button><button class="btn sm" id="hF"${draft.pts.length?'':' disabled'}>Terminar acá</button><button class="btn sm" id="hC">Cancelar</button>`;
+    $('#hU').onclick=()=>{draft.pts.pop();drawDraft();renderHint()};$('#hF').onclick=finishFree;$('#hC').onclick=()=>{draft=null;refreshLight()};return}
+  if(moveMode&&sel&&sel.k==='dev'){const it=byId(sel.id);h.innerHTML=`Tocá el nuevo lugar para <b>${esc(it.p.label||TYPES[it.t].name)}</b>. <button class="btn sm" id="hM">Cancelar</button>`;$('#hM').onclick=()=>{moveMode=false;refresh()};return}
+  h.className='hint';h.textContent=sel&&sel.k==='cable'?'Arrastrá un círculo amarillo para mover ese tramo, o arrastrá desde cualquier punto del cable para sacar una curva nueva.':matchMedia('(max-width:980px)').matches?'Tocá un componente de abajo y después un lugar del riel. Arrastrá una térmica para moverla. Tocá un cable para acomodar su recorrido.':'Arrastrá componentes al riel y los dispositivos para moverlos (los cables los siguen). Tocá un cable para acomodar su recorrido tramo por tramo.'}
+
+/* ---------------- docs ---------------- */
+function matRows(){const map=new Map();
+  for(const it of S.items){const d=TYPES[it.t].desc;if(!d)continue;const k=d(it.p);map.set(k,(map.get(k)||0)+1)}
+  const rows=[...map].sort((a,b)=>a[0].localeCompare(b[0],'es')).map(([d,q])=>[d,String(q)]);
+  const cab=new Map();for(const c of S.cables){const g=cableGeom(c);if(!g)continue;const k=`Cable unipolar ${String(c.sec||'2.5').replace('.',',')} mm² ${COLS[c.col].n.split(' ')[0].toLowerCase()}`;cab.set(k,(cab.get(k)||0)+g.len/2000+.15)}
+  [...cab].sort().forEach(([k,m])=>rows.push([k+' (interior del tablero)',m.toFixed(1).replace('.',',')+' m']));
+  if(S.sectors.length)rows.push([`Prensacables para salidas`,String(S.sectors.length+1)]);
+  const {W}=dims();rows.push([`Gabinete para ${S.rails*S.mods} módulos (${S.rails} filas × ${S.mods})`,'1'],[`Riel DIN 35 mm × ${Math.round((W-44)/2)} mm`,String(S.rails)]);
+  return rows}
+function secOf(id){const out=[];for(const c of S.cables){const e=c.a.k==='dev'&&c.a.id===id?c.b:c.b.k==='dev'&&c.b.id===id?c.a:null;if(e&&e.k==='sec'){const i=S.sectors.findIndex(s=>s.id===e.id);if(i>=0&&!out.includes(i+1))out.push(i+1)}}return out}
+function renderDocs(){
+  const {list,m}=numbering();
+  let h=list.length?`<table><thead><tr><th>N°</th><th>Circuito</th><th>Dispositivo</th><th>Salida</th></tr></thead><tbody>${list.map(it=>{const so=secOf(it.id);return`<tr><td class="n">${m[it.id]}</td><td>${esc(it.p.label||'—')}</td><td class="m">${esc(TYPES[it.t].short(it.p))}</td><td class="q">${so.join(', ')||'—'}</td></tr>`}).join('')}</tbody></table>`:'<p class="nodata">Todavía no hay dispositivos en el tablero.</p>';
+  if(S.sectors.length)h+=`<table style="margin-top:14px"><thead><tr><th>Salida</th><th>Sector</th></tr></thead><tbody>${S.sectors.map((s,i)=>`<tr><td class="n">${i+1}</td><td>${esc(s.name)}</td></tr>`).join('')}</tbody></table>`;
+  $('#legend').innerHTML=h;
+  const rows=matRows();
+  $('#mat').innerHTML=`<table><thead><tr><th>Descripción</th><th style="text-align:right">Cant.</th></tr></thead><tbody>${rows.map(([d,q])=>`<tr${/^Cable|^Gabinete|^Riel|^Prensa/.test(d)?' class="sub"':''}><td>${esc(d)}</td><td class="q">${q}</td></tr>`).join('')}</tbody></table>`;
+}
+
+/* ---------------- toolbar ---------------- */
+const railsSel=$('#rails'),modsSel=$('#mods');
+railsSel.innerHTML=[1,2,3,4,5,6].map(v=>`<option>${v}</option>`).join('');modsSel.innerHTML=[4,6,8,12,18,24].map(v=>`<option>${v}</option>`).join('');
+railsSel.onchange=()=>{const v=+railsSel.value,bad=S.items.filter(i=>i.rail>=v);if(bad.length){toast(`Primero mové o eliminá lo que hay en la fila ${bad[0].rail+1}`);railsSel.value=S.rails;return}commit();S.rails=v;refresh()};
+modsSel.onchange=()=>{const v=+modsSel.value,bad=S.items.filter(i=>i.slot+wOf(i)>v);if(bad.length){toast(`Hay dispositivos más allá del módulo ${v}: movelos primero`);modsSel.value=S.mods;return}commit();S.mods=v;refresh()};
+const pn=$('#pname');let pnC=false;pn.addEventListener('focus',()=>pnC=false);pn.addEventListener('input',()=>{if(!pnC){commit();pnC=true}S.name=pn.value;save();renderPanel()});
+$('#bUndo').onclick=undo;$('#bRedo').onclick=redo;
+$('#bNew').onclick=()=>{commit();S.items=[];S.cables=[];S.sectors=[];delete S.pubId;sel=null;armed=null;draft=null;moveMode=false;refresh();toast('Tablero vacío · Deshacer lo recupera')};
+$('#bSample').onclick=()=>{commit();S=sample();sel=null;armed=null;draft=null;refresh()};
+
+/* ---------------- export ---------------- */
+function exportSVG(){
+  const {W,H}=dims(),EW=Math.max(W+40,780),ox=(EW-W)/2,{list,m}=numbering(),mats=matRows(),lh=19,col=(EW-60)/2;
+  const t=(x,y,s,sz,wt,fill,anc)=>`<text x="${x}" y="${y}" font-size="${sz}" font-weight="${wt}" fill="${fill}" text-anchor="${anc||'start'}" font-family="Helvetica, Arial, sans-serif">${esc(s)}</text>`;
+  let y0=H+46+44,out='',yl=y0;
+  out+=t(30,yl,'CIRCUITOS',13,700,'#15181b');yl+=8;out+=`<line x1="30" y1="${yl}" x2="${10+col}" y2="${yl}" stroke="#15181b"/>`;yl+=16;
+  for(const it of list){const so=secOf(it.id);out+=t(30,yl,String(m[it.id]),11,700,'#b58a00')+t(54,yl,(it.p.label||'—').slice(0,30),11,500,'#15181b')+t(10+col,yl,TYPES[it.t].short(it.p)+(so.length?' → S'+so.join(','):''),10,500,'#5b636b','end');yl+=lh}
+  if(S.sectors.length){yl+=10;out+=t(30,yl,'SALIDAS',13,700,'#15181b');yl+=8;out+=`<line x1="30" y1="${yl}" x2="${10+col}" y2="${yl}" stroke="#15181b"/>`;yl+=16;S.sectors.forEach((s,i)=>{out+=t(30,yl,String(i+1),11,700,'#b58a00')+t(54,yl,s.name,11,500,'#15181b');yl+=lh})}
+  let ym=y0;const mx=30+col;out+=t(mx,ym,'LISTA DE MATERIALES',13,700,'#15181b');ym+=8;out+=`<line x1="${mx}" y1="${ym}" x2="${EW-30}" y2="${ym}" stroke="#15181b"/>`;ym+=16;
+  for(const [d,q] of mats){const cut=d.length>46?d.lastIndexOf(' ',46):-1,lines=cut>0?[d.slice(0,cut),d.slice(cut+1)]:[d];out+=t(mx,ym,q,11,700,'#b58a00');lines.forEach((l,i)=>out+=t(mx+50,ym+i*14,l,11,500,'#15181b'));ym+=lh+(lines.length-1)*14}
+  const EH=Math.max(yl,ym)+36,date=new Date().toLocaleDateString('es-AR');
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${EW}" height="${EH}" viewBox="0 0 ${EW} ${EH}">${DEFS}<rect width="${EW}" height="${EH}" fill="#ffffff"/>`+t(30,30,(S.name||'Tablero').slice(0,60),17,700,'#15181b')+t(EW-30,30,`${S.rails} × ${S.mods} módulos · ${date}`,11,500,'#5b636b','end')+`<g transform="translate(${ox} 46)">${panelMarkup(true)}</g>`+out+`</svg>`}
+let expBlob=null;
+$('#bExport').onclick=()=>{const img=new Image();
+  img.onload=()=>{const sc=2,c=document.createElement('canvas');c.width=img.width*sc;c.height=img.height*sc;const x=c.getContext('2d');x.scale(sc,sc);x.drawImage(img,0,0);
+    try{$('#expImg').src=c.toDataURL('image/png');c.toBlob(b=>expBlob=b,'image/png')}catch(e){$('#expImg').src=img.src;expBlob=null}$('#mExport').hidden=false};
+  img.onerror=()=>toast('No se pudo generar la imagen del plano');img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(exportSVG())};
+$('#bCopyImg').onclick=async()=>{try{if(!expBlob||!window.ClipboardItem)throw 0;await navigator.clipboard.write([new ClipboardItem({'image/png':expBlob})]);toast('Imagen copiada')}catch(e){toast('Este navegador no deja copiar imágenes: mantené presionada la imagen para guardarla')}};
+$('#bCloseExp').onclick=()=>$('#mExport').hidden=true;
+$('#bProj').onclick=()=>{$('#projTxt').value=JSON.stringify(S);$('#mProj').hidden=false};
+$('#bCloseProj').onclick=()=>$('#mProj').hidden=true;
+$('#bCopyJson').onclick=async()=>{const ta=$('#projTxt');try{await navigator.clipboard.writeText(ta.value);toast('Texto copiado')}catch(e){ta.focus();ta.select();toast('Seleccionado: copialo con Copiar')}};
+function openJson(txt){try{const v=JSON.parse(txt);if(!v||!Array.isArray(v.items)||!v.rails||!v.mods)throw 0;commit();S=fix(v);sel=null;armed=null;draft=null;refresh();$('#mProj').hidden=true;toast('Tablero abierto')}catch(e){toast('Ese texto no es un tablero válido')}}
+$('#bLoadJson').onclick=()=>openJson($('#projTxt').value);
+$('#fileIn').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>openJson(r.result);r.readAsText(f);e.target.value=''};
+document.querySelectorAll('.modal').forEach(md=>md.addEventListener('click',e=>{if(e.target===md)md.hidden=true}));
+
+/* ---------------- misc ---------------- */
+let tT;function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>t.classList.remove('show'),2600)}
+document.addEventListener('keydown',e=>{const typing=/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName);if(typing)return;
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo()}
+  else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();redo()}
+  else if((e.key==='Delete'||e.key==='Backspace')&&sel){e.preventDefault();const b=$('#bDel')||$('#bDelC')||$('#sDel');if(b)b.click()}
+  else if(e.key==='Escape'){armed=null;moveMode=false;draft=null;document.querySelectorAll('.modal').forEach(m=>m.hidden=true);refresh()}});
+function prune(){S.cables=S.cables.filter(c=>endPos(c.a,c)&&endPos(c.b,c))}
+function refreshLight(){renderPanel();drawDraft();renderHint()}
+function refresh(){
+  migrate();prune();if(sel){const ok=sel.k==='dev'?byId(sel.id):sel.k==='cable'?S.cables.some(c=>c.id===sel.id):S.sectors.some(s=>s.id===sel.id);if(!ok)sel=null}
+  save();renderPanel();drawDraft();renderInsp();renderDocs();renderHint();syncTools();
+  railsSel.value=S.rails;modsSel.value=S.mods;if(document.activeElement!==pn)pn.value=S.name||'';
+  palEl.querySelectorAll('.pi').forEach(b=>b.classList.toggle('on',!!armed&&armed.key===b.dataset.g+'-'+b.dataset.i));
+  $('#bUndo').disabled=!hist.length;$('#bRedo').disabled=!fut.length}
+/* ---------------- publicación online (Supabase), QR y vista de solo lectura ---------------- */
+const CFG=window.TABLERISTA_CFG||{};
+const SITE=(CFG.siteUrl||'').replace(/\/?$/,'/'),SUPA=(CFG.supabaseUrl||'').replace(/\/$/,''),SKEY=CFG.supabaseAnonKey||'';
+const ONLINE=!!(CFG.siteUrl&&SUPA&&SKEY);
+const IS_APP=!!window.AndroidBridge;
+const boardUrl=id=>SITE+'#t-'+id;
+const fmtDate=t=>{try{return new Date(t).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}catch(e){return''}};
+const rnd=(n,a)=>{const b=new Uint8Array(n);crypto.getRandomValues(b);let s='';for(const x of b)s+=a[x%a.length];return s};
+const newId=()=>rnd(8,'abcdefghijkmnpqrstuvwxyz23456789'),newKey=()=>rnd(32,'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789');
+const boardData=()=>({name:S.name,rails:S.rails,mods:S.mods,items:S.items,sectors:S.sectors,cables:S.cables});
+const hash=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return(h>>>0).toString(36)};
+const PUBK='tablerista.pub';
+let MYPUB={};try{MYPUB=JSON.parse(localStorage.getItem(PUBK)||'{}')||{}}catch(e){}
+const savePub=()=>{try{localStorage.setItem(PUBK,JSON.stringify(MYPUB))}catch(e){}};
+async function sb(path,body){
+  const r=await fetch(SUPA+'/rest/v1/'+path,{method:body?'POST':'GET',headers:{apikey:SKEY,Authorization:'Bearer '+SKEY,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+  const t=await r.text();if(!r.ok){let m=t;try{m=JSON.parse(t).message||t}catch(e){}throw new Error(m)}return t?JSON.parse(t):null}
+const mimeOf=n=>/\.png$/i.test(n)?'image/png':/\.json$/i.test(n)?'application/json':'application/octet-stream';
+const blobToB64=b=>new Promise((ok,ko)=>{const f=new FileReader();f.onload=()=>ok(String(f.result).split(',')[1]);f.onerror=ko;f.readAsDataURL(b)});
+const toBlob=src=>fetch(src).then(r=>r.blob());
+async function dl(filename,blob){
+  if(IS_APP){try{if(!AndroidBridge.saveFile(filename,await blobToB64(blob),mimeOf(filename)))toast('No se pudo guardar el archivo')}catch(e){toast('No se pudo guardar el archivo')}return}
+  const u=URL.createObjectURL(blob),a=document.createElement('a');a.href=u;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000)}
+async function share(filename,blob,text){
+  if(IS_APP){try{AndroidBridge.shareFile(filename,await blobToB64(blob),mimeOf(filename),text||'')}catch(e){toast('No se pudo compartir')}return}
+  const f=new File([blob],filename,{type:mimeOf(filename)});
+  if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f],text:text||''})}catch(e){}}else dl(filename,blob)}
+const safeName=s=>(s||'tablero').normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/gi,'-').replace(/^-|-$/g,'').toLowerCase().slice(0,40)||'tablero';
+
+function makeLabel(id,name,at){
+  const W=900,H=1180,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+  x.fillStyle='#fff';x.fillRect(0,0,W,H);x.lineWidth=8;x.strokeStyle='#111';x.strokeRect(4,4,W-8,H-8);
+  x.fillStyle='#111';x.fillRect(0,0,W,150);
+  x.fillStyle='#f5c518';x.beginPath();[[70,28],[34,86],[62,86],[52,124],[92,64],[64,64],[80,28]].forEach(([a,b],i)=>i?x.lineTo(a,b):x.moveTo(a,b));x.closePath();x.fill();
+  x.fillStyle='#fff';x.font='800 50px "Exo 2", Arial, sans-serif';x.textBaseline='middle';x.fillText('PLANO DEL TABLERO',120,76);
+  x.fillStyle='#111';x.textAlign='center';x.font='700 44px "Exo 2", Arial, sans-serif';
+  const L=wrap(name||'Tablero',28,2);L.forEach((l,i)=>x.fillText(l,W/2,205+i*52));
+  const M=QR.encode(boardUrl(id)),n=M.length,cell=Math.floor(640/(n+8)),q=cell*(n+8),ox=(W-q)/2,oy=205+L.length*52;
+  x.fillStyle='#fff';x.fillRect(ox,oy,q,q);x.fillStyle='#000';
+  for(let r=0;r<n;r++)for(let k=0;k<n;k++)if(M[r][k])x.fillRect(ox+(k+4)*cell,oy+(r+4)*cell,cell,cell);
+  const ty=oy+q+30;x.font='700 34px "IBM Plex Sans", Arial, sans-serif';x.fillText('Escaneá con la cámara del celular',W/2,ty);
+  x.font='500 24px "IBM Plex Sans", Arial, sans-serif';x.fillStyle='#444';x.fillText('Circuitos, salidas y cableado · Solo lectura',W/2,ty+44);
+  x.font='500 20px "IBM Plex Mono", monospace';x.fillStyle='#666';x.fillText(`ID ${id}${at?' · publicado '+new Date(at).toLocaleDateString('es-AR'):''}`,W/2,ty+82);
+  for(let k=-40;k<W+40;k+=50){x.fillStyle='#111';x.beginPath();x.moveTo(k,H-40);x.lineTo(k+25,H-40);x.lineTo(k+5,H-8);x.lineTo(k-20,H-8);x.closePath();x.fill()}
+  x.fillStyle='#f5c518';x.globalCompositeOperation='destination-over';x.fillRect(4,H-40,W-8,32);x.globalCompositeOperation='source-over';
+  return c}
+
+async function publishNow(){
+  if(!ONLINE){toast('Falta configurar la publicación online (config.js)');return}
+  if(!S.pubId)S.pubId=newId();if(!S.pubKey)S.pubKey=newKey();save();
+  const id=S.pubId,data=boardData(),btn=$('#qPub');btn.disabled=true;btn.textContent='Publicando…';
+  try{await sb('rpc/publish_board',{p_id:id,p_key:S.pubKey,p_name:S.name||'Tablero',p_data:data});
+    MYPUB[id]={name:S.name||'Tablero',at:Date.now(),h:hash(JSON.stringify(data)),key:S.pubKey};savePub();toast('Tablero publicado: el QR ya funciona')}
+  catch(e){toast(/permiso/i.test(e.message)?'Ese tablero lo publicó otro equipo: no se puede pisar':'No se pudo publicar. Revisá la conexión a internet.')}
+  openQR()}
+async function unpublish(id){
+  const p=MYPUB[id];if(!p)return;
+  try{await sb('rpc/delete_board',{p_id:id,p_key:p.key});delete MYPUB[id];savePub();toast('Tablero quitado: ese QR ya no muestra nada')}
+  catch(e){toast('No se pudo quitar. Revisá la conexión a internet.')}
+  openQR()}
+function openQR(){
+  if(!S.pubId){S.pubId=newId();save()}
+  const id=S.pubId,pub=MYPUB[id],same=pub&&pub.h===hash(JSON.stringify(boardData()));
+  $('#qrStatus').innerHTML=!ONLINE?'La publicación online <b>no está configurada</b>: completá <code>config.js</code> con los datos de Supabase y GitHub Pages (ver LEEME).':!pub?'Este tablero <b>todavía no está publicado</b>. Tocá Publicar para que el QR funcione.':same?`Publicado el <b>${esc(fmtDate(pub.at))}</b>. El QR muestra esta versión.`:`Publicado el ${esc(fmtDate(pub.at))}, pero <b>tiene cambios sin publicar</b>.`;
+  $('#qPub').disabled=!ONLINE||!!same;$('#qPub').textContent=!pub?'Publicar tablero':same?'Publicado':'Actualizar publicación';
+  $('#qrImg').src=makeLabel(id,S.name,pub&&pub.at).toDataURL('image/png');
+  const list=Object.entries(MYPUB).sort((a,b)=>b[1].at-a[1].at);
+  $('#qList').innerHTML=list.length?`<h2 style="font-size:14px;margin-top:6px">Mis tableros publicados (${list.length})</h2>`+list.map(([k,b])=>`<div class="pubrow"><div><b>${esc(b.name||'Tablero')}</b>${k===id?' <span class="pill ok">este</span>':''}<br><small style="color:var(--mut)">${esc(fmtDate(b.at))} · ID ${k}</small></div><div class="row"><button class="btn sm" data-open="${k}">Abrir</button><button class="btn sm danger" data-unpub="${k}">Quitar</button></div></div>`).join(''):'';
+  $('#qList').querySelectorAll('[data-unpub]').forEach(b=>b.onclick=()=>{if(b.dataset.confirm!=='1'){b.dataset.confirm='1';b.textContent='¿Seguro? El QR deja de andar';return}unpublish(b.dataset.unpub)});
+  $('#qList').querySelectorAll('[data-open]').forEach(b=>b.onclick=async()=>{const k=b.dataset.open;try{const row=await fetchBoard(k);if(!row)throw 0;commit();S=fix(row.data);S.pubId=k;S.pubKey=MYPUB[k].key;sel=null;draft=null;$('#mQR').hidden=true;refresh();toast('Tablero abierto para editar')}catch(e){toast('No se pudo abrir. Revisá la conexión a internet.')}});
+  $('#mQR').hidden=false}
+async function fetchBoard(id){const rows=await sb(`tableros?id=eq.${encodeURIComponent(id)}&select=id,name,data,updated_at`);return rows&&rows[0]||null}
+$('#bQR').onclick=openQR;$('#qClose').onclick=()=>$('#mQR').hidden=true;$('#qPub').onclick=publishNow;
+$('#qDl').onclick=async()=>dl(`qr-${safeName(S.name)}.png`,await toBlob($('#qrImg').src));
+$('#qShare').onclick=async()=>share(`qr-${safeName(S.name)}.png`,await toBlob($('#qrImg').src),`Plano del tablero: ${boardUrl(S.pubId)}`);
+$('#qCopy').onclick=async()=>{const u=boardUrl(S.pubId);try{await navigator.clipboard.writeText(u);toast('Enlace copiado')}catch(e){toast(u)}};
+$('#bDlImg').onclick=async()=>dl(`plano-${safeName(S.name)}.png`,await toBlob($('#expImg').src));
+$('#bShareImg').onclick=async()=>share(`plano-${safeName(S.name)}.png`,await toBlob($('#expImg').src),S.name||'Plano del tablero');
+$('#bSaveJson').onclick=()=>dl(`${safeName(S.name)}.tablero.json`,new Blob([JSON.stringify(Object.assign({},boardData()))],{type:'application/json'}));
+const apk=$('#bApk');if(apk)apk.hidden=IS_APP;
+
+function enterView(b){document.body.classList.remove('vload');VIEW=b.id;S=fix(b.data);hist=[];fut=[];sel=null;armed=null;draft=null;moveMode=false;mode='view';
+  document.body.classList.add('viewing');$('#vbar').hidden=false;$('#vTitle').textContent=b.name||'Tablero';$('#vDate').textContent='Actualizado el '+fmtDate(b.updated_at);document.title=(b.name||'Tablero')+' · Plano';refresh()}
+function exitView(){document.body.classList.remove('vload');if(!VIEW){document.body.classList.remove('viewing');$('#vbar').hidden=true;return}VIEW=null;S=load();mode='move';document.body.classList.remove('viewing');$('#vbar').hidden=true;document.title='Tablerista';refresh()}
+async function route(){const m=(location.hash||'').match(/^#t-([a-z0-9]{4,16})$/i);
+  if(!m){exitView();return}
+  if(!ONLINE){toast('La publicación online no está configurada');return}
+  document.body.classList.add('viewing','vload');$('#vbar').hidden=false;$('#vTitle').textContent='Cargando tablero…';$('#vDate').textContent='';
+  try{const b=await fetchBoard(m[1].toLowerCase());if(!b)throw new Error('nf');enterView(b)}
+  catch(e){$('#vTitle').textContent=e.message==='nf'?'Este tablero no está publicado':'No se pudo cargar el tablero';$('#vDate').textContent=e.message==='nf'?'Puede que lo hayan quitado.':'Revisá la conexión a internet y volvé a escanear el QR.'}}
+addEventListener('hashchange',route);
+$('#vNorm').onclick=()=>openNorm('dom');$('#vExport').onclick=()=>$('#bExport').click();
+
+/* ---------------- normas & chequeo ---------------- */
+function checks(){
+  const R=[],add=(st,t,d)=>R.push({st,t,d}),it=S.items,terms=it.filter(i=>i.t==='term'),difs=it.filter(i=>i.t==='dif');
+  const nm=i=>i.p.label||TYPES[i.t].name;
+  const gen=terms.find(i=>+i.p.poles>=2&&/general|principal/i.test(i.p.label||''))||terms.find(i=>+i.p.poles>=2&&i.rail===0&&i.slot===0);
+  add(gen?'ok':'no','Interruptor general',gen?`${nm(gen)}: ${gen.p.poles}P ${gen.p.curve}${gen.p.amp}. Corta todos los polos.`:'Falta una térmica general bipolar (monofásico) o tetrapolar (trifásico). Ponela primera en la fila 1 y nombrala "Térmica general".');
+  const d30=difs.filter(i=>i.p.sens==='30mA');
+  add(d30.length?'ok':'no','Diferencial de 30 mA',d30.length?`${d30.length} diferencial(es) de 30 mA.`:'La reglamentación exige protección diferencial de 30 mA como máximo para proteger a las personas.');
+  if(gen)difs.forEach(d=>{if(+d.p.amp<+gen.p.amp)add('wa',`Calibre de ${nm(d)}`,`El diferencial es de ${d.p.amp} A y la térmica general de ${gen.p.amp} A: usá un diferencial de calibre igual o mayor.`)});
+  // cableado: térmicas alimentadas desde un diferencial
+  const adj={},link=(a,b)=>{(adj[a]=adj[a]||[]).push(b);(adj[b]=adj[b]||[]).push(a)};
+  for(const c of S.cables)link(ekey(c.a),ekey(c.b));
+  for(const i of it){const T=termsOf(i).map(t=>t.k);
+    if(i.t==='bdist'){const u=T.filter(k=>k[0]==='u'),d=T.filter(k=>k[0]==='d');u.forEach(k=>link(`dev:${i.id}:u0`,`dev:${i.id}:${k}`));d.forEach(k=>link(`dev:${i.id}:d0`,`dev:${i.id}:${k}`))}
+    if(i.t==='born')[0,1,2].forEach(k=>link(`dev:${i.id}:t${k}`,`dev:${i.id}:b${k}`))}
+  if(S.cables.length&&difs.length){const seen=new Set(),q=[];difs.forEach(d=>termsOf(d).filter(t=>t.k[0]==='b').forEach(t=>{const k=`dev:${d.id}:${t.k}`;seen.add(k);q.push(k)}));
+    while(q.length){const k=q.shift();for(const n of adj[k]||[]){if(seen.has(n))continue;seen.add(n);const [,did,tk]=n.split(':');const dv=byId(did);if(dv&&dv.t==='dif')continue;if(dv&&dv.t==='term'&&tk[0]==='b')continue;q.push(n)}}
+    const unp=terms.filter(t=>t!==gen&&!termsOf(t).some(x=>x.k[0]==='t'&&seen.has(`dev:${t.id}:${x.k}`)));
+    add(unp.length?'wa':'ok','Circuitos detrás de un diferencial',unp.length?`Según el cableado, estas térmicas no toman corriente de un diferencial: ${unp.map(nm).join(', ')}.`:'Todas las térmicas de circuitos se alimentan desde un diferencial.')}
+  else add('wa','Circuitos detrás de un diferencial','Cableá el tablero para poder verificar que cada circuito quede protegido por un diferencial.');
+  const p1=terms.filter(i=>i.p.poles==='1');
+  add(p1.length?'wa':'ok','Corte bipolar en circuitos',p1.length?`${p1.length} térmica(s) de 1 polo. En viviendas y oficinas cada circuito monofásico debe cortar fase y neutro (térmica bipolar).`:'Todas las térmicas cortan fase y neutro.');
+  if(it.some(i=>i.t==='fus'))add('no','Fusibles','La AEA 771 no admite fusibles como protección de circuitos en viviendas y oficinas: reemplazalos por térmicas.');
+  const tot=S.rails*S.mods,used=it.filter(i=>i.t!=='res').reduce((a,i)=>a+wOf(i),0),pct=Math.round((tot-used)/tot*100);
+  add(pct>=20?'ok':'wa','Espacio de reserva',`${tot-used} de ${tot} módulos libres o en reserva (${pct}%). Se pide dejar reserva para ampliaciones (referencia usual: 20% o más).`);
+  const hasPE=it.some(i=>(i.t==='born'&&i.p.color==='Tierra')||(i.t==='bdist'&&i.p.color==='Tierra'))||S.cables.some(c=>c.col==='PE');
+  add(hasPE?'ok':'no','Barra o borne de tierra (PE)',hasPE?'El tablero tiene conductor/borne de protección.':'Agregá bornes o bornera de tierra: el conductor de protección tiene que llegar a todos los circuitos y a la puesta a tierra.');
+  const hasN=it.some(i=>(i.t==='born'&&i.p.color==='Neutro')||(i.t==='bdist'&&i.p.color!=='Tierra'));
+  add(hasN?'ok':'wa','Barra de neutro identificada',hasN?'Hay borneras de neutro separadas de las de tierra.':'Conviene una bornera de neutro identificada y separada de la de tierra.');
+  const bad=S.cables.filter(c=>c.col==='PE'&&[c.a,c.b].some(e=>{if(e.k!=='dev')return false;const d=byId(e.id);return d&&(d.t==='term'||d.t==='dif')}));
+  if(bad.length)add('no','Color de conductores',`${bad.length} cable(s) verde-amarillo conectados a térmicas o diferenciales. El verde-amarillo es exclusivo de tierra.`);
+  const pe2=S.cables.filter(c=>c.col!=='PE'&&[c.a,c.b].some(e=>{if(e.k==='sec'){const s=S.sectors.find(x=>x.id===e.id);return s&&s.icon==='tierra'}if(e.k!=='dev')return false;const d=byId(e.id);return d&&((d.t==='born'&&d.p.color==='Tierra')||(d.t==='bdist'&&d.p.color==='Tierra'))}));
+  if(pe2.length)add('no','Conductores a tierra',`${pe2.length} cable(s) que llegan a tierra no son verde-amarillo.`);
+  const low=S.cables.filter(c=>+c.sec<+recSec(c));
+  add(low.length?'wa':'ok','Sección de cada cable',low.length?`${low.length} cable(s) con sección menor a la recomendada (se marcan en rojo en el plano). Usá "Medidas auto" para corregirlos.`:'Cada cable tiene una sección igual o mayor a la recomendada para su protección.');
+  const tipo=[];terms.forEach(t=>{const l=(t.p.label||'').toLowerCase();if(/ilum/.test(l)&&+t.p.amp>16)tipo.push(`${nm(t)}: iluminación de uso general, máx. 16 A`);if(/toma/.test(l)&&+t.p.amp>20)tipo.push(`${nm(t)}: tomas de uso general, máx. 20 A`)});
+  if(tipo.length)add('wa','Tipo de circuito',tipo.join(' · '));
+  const sinN=[...terms,...difs].filter(i=>!i.p.label);
+  add(sinN.length?'wa':'ok','Identificación de circuitos',sinN.length?`${sinN.length} protección(es) sin nombre. Cada circuito tiene que quedar rotulado.`:'Todas las protecciones están rotuladas.');
+  if(it.some(i=>(i.t==='term'||i.t==='dif')&&+i.p.poles>=3))add('wa','Tablero trifásico','Repartí los circuitos monofásicos entre L1, L2 y L3 para equilibrar la carga, y usá colores de fase distintos.');
+  return R}
+const SRC=`<div class="src">Fuentes consultadas: <a href="https://aea.org.ar/wp-content/uploads/2017/10/90364-7-771-2.pdf" target="_blank" rel="noopener">AEA 90364-7-771 (prólogo)</a> · <a href="https://www.fceia.unr.edu.ar/de-sire/Apunte_ProyectoInstalacionesElectricas.pdf" target="_blank" rel="noopener">Apunte FCEIA-UNR</a> · <a href="https://ar.elecalculador.com/tablas/referencias/colores-cables" target="_blank" rel="noopener">Colores AEA</a> · <a href="https://ar.elecalculador.com/guias/practica/instalacion-trifasica" target="_blank" rel="noopener">Trifásico residencial</a> · <a href="https://www.edesur.com.ar/wp-content/uploads/2025/01/Consideraciones-sobre-el-certificado-DCI-V1.pdf" target="_blank" rel="noopener">Edesur: certificado DCI</a> · <a href="https://fluke.com.ar/blog/article/resolucion-900-2015-medicion-de-la-resistencia-a-puesta-tierra" target="_blank" rel="noopener">Res. SRT 900/2015</a> · <a href="https://www.editores.com.ar/revistas/ie/341/si_farina_tableros_electricos_riei_90364" target="_blank" rel="noopener">Tableros según RIEI 90364</a></div>`;
+const WARN=`<div class="warn">Guía orientativa basada en la Reglamentación AEA 90364. No reemplaza el texto de la reglamentación ni a un electricista matriculado: verificá la edición vigente y lo que pida tu distribuidora o municipio.</div>`;
+const NORMAS={
+  chk:{t:'Chequeo del tablero',h:()=>{const R=checks(),n={ok:0,wa:0,no:0};R.forEach(r=>n[r.st]++);const lab={ok:'OK',wa:'REVISAR',no:'FALTA'};
+    return `<p><b>${esc(S.name||'Tablero')}</b>: ${n.ok} en regla, ${n.wa} para revisar, ${n.no} faltantes.</p><ul class="chk">${R.map(r=>`<li><span class="pill ${r.st}">${lab[r.st]}</span><div><b>${esc(r.t)}</b><small>${esc(r.d)}</small></div></li>`).join('')}</ul><p style="font-size:12px;color:var(--mut);margin-top:10px">El chequeo lee lo que dibujaste: nombres, calibres, colores y secciones de cable. Las corrientes admisibles son orientativas (cable de cobre en cañería); confirmalas con la tabla de la reglamentación.</p>`+WARN}},
+  dom:{t:'Domiciliario',h:()=>`${WARN}
+<h3>Qué reglamentación aplica</h3><ul><li><b>AEA 90364</b> es la reglamentación para instalaciones eléctricas en inmuebles. Para viviendas, oficinas y locales unitarios se usa la <b>sección 771</b>; la <b>770</b> es la versión simplificada para viviendas de baja potencia (guías AEA 770 hasta 10 kW).</li><li>La obra la ejecuta y certifica un <b>electricista matriculado</b>.</li></ul>
+<h3>Grados de electrificación (vivienda)</h3><div class="tw"><table><thead><tr><th>Grado</th><th>Superficie</th><th>Demanda</th><th>Circuitos mín.</th></tr></thead><tbody><tr><td>Mínimo</td><td>hasta 60 m²</td><td>hasta 3,7 kVA</td><td class="q">2</td></tr><tr><td>Medio</td><td>60 a 130 m²</td><td>hasta 7 kVA</td><td class="q">3</td></tr><tr><td>Elevado</td><td>130 a 200 m²</td><td>hasta 11 kVA</td><td class="q">5</td></tr><tr><td>Superior</td><td>más de 200 m²</td><td>más de 11 kVA</td><td class="q">6</td></tr></tbody></table></div>
+<h3>Tipos de circuito</h3><div class="tw"><table><thead><tr><th>Circuito</th><th>Bocas máx.</th><th>Protección máx.</th><th>Sección mín.</th></tr></thead><tbody><tr><td>IUG · iluminación uso general</td><td class="q">15</td><td class="q">16 A</td><td class="q">1,5 mm²</td></tr><tr><td>TUG · tomas uso general</td><td class="q">15</td><td class="q">20 A</td><td class="q">2,5 mm²</td></tr><tr><td>IUE · iluminación uso especial</td><td class="q">12</td><td class="q">32 A</td><td class="q">2,5 mm²</td></tr><tr><td>TUE · tomas uso especial (aire, horno, bomba)</td><td class="q">12 (771) · 15 (770)</td><td class="q">32 A</td><td class="q">2,5 mm²</td></tr><tr><td>ACU · alimentación de carga única</td><td class="q">1 equipo</td><td class="q">según el equipo</td><td class="q">según cálculo</td></tr></tbody></table></div>
+<p style="font-size:13px;color:var(--mut)">Los 32 A son el <b>tope</b> del tipo de circuito, no el valor a usar siempre: la térmica se elige por la carga y no puede superar lo que aguanta el cable. Con 32 A hace falta más de 2,5 mm² (orientativo: 6 mm² en cañería).</p>
+<h3>Medida de cable según la térmica (orientativo)</h3><div class="tw"><table><thead><tr><th>Sección Cu</th><th>Corriente admisible aprox. (en cañería)</th><th>Térmica máx. usual</th></tr></thead><tbody><tr><td>1,5 mm²</td><td class="q">15 A</td><td class="q">10 A</td></tr><tr><td>2,5 mm²</td><td class="q">21 A</td><td class="q">16 / 20 A</td></tr><tr><td>4 mm²</td><td class="q">28 A</td><td class="q">25 A</td></tr><tr><td>6 mm²</td><td class="q">36 A</td><td class="q">32 A</td></tr><tr><td>10 mm²</td><td class="q">50 A</td><td class="q">40 A</td></tr><tr><td>16 mm²</td><td class="q">66 A</td><td class="q">63 A</td></tr></tbody></table></div>
+<h3>Secciones mínimas de cobre</h3><ul><li>Línea principal (medidor → tablero principal): <b>4 mm²</b>.</li><li>Línea seccional (principal → seccional): <b>2,5 mm²</b>.</li><li>Iluminación: <b>1,5 mm²</b> · Tomas: <b>2,5 mm²</b> · Conductor de protección (PE): <b>2,5 mm²</b>.</li><li>Caída de tensión: referencia usual 5% en total entre el medidor y el punto más lejano.</li></ul>
+<h3>Tablero principal y seccional</h3><ul><li><b>Interruptor general</b> que corte todos los polos: bipolar en monofásico, tetrapolar en trifásico.</li><li><b>Diferencial de 30 mA</b> como máximo protegiendo los circuitos. Un diferencial por grupo de circuitos evita que un solo defecto deje toda la casa sin luz.</li><li><b>Una térmica por circuito</b>, con corte bipolar según el tipo de circuito. <b>No se admiten fusibles</b> como protección en viviendas y oficinas.</li><li>Barras o borneras de <b>neutro</b> y de <b>tierra</b> separadas e identificadas.</li><li><b>Espacio de reserva</b> para ampliaciones (la 771 lo exige; la referencia usual es 20% o más de los módulos).</li><li>Gabinete de material aislante autoextinguible o metálico, con riel DIN, contratapa y puerta. Grado de protección acorde al lugar: IP30 a IP40 en interior seco, IP44 o más en lugares húmedos, IP54 en exterior.</li><li>En lugar accesible y a una altura cómoda para operarlo; nunca dentro de baños ni placares cerrados.</li><li>Cada circuito <b>rotulado</b> y el <b>esquema unifilar</b> a mano en la tapa. Por eso sirve el QR de Tablerista.</li></ul>
+<h3>Tomas y bocas</h3><ul><li>Tomacorrientes con tierra según <b>IRAM 2071</b> (tres patas planas). No se usan tomas sin conductor de protección.</li><li>El conductor de protección llega a todas las bocas y a todas las masas metálicas.</li></ul>`+SRC},
+  tri:{t:'Trifásico',h:()=>`${WARN}
+<h3>Cuándo</h3><ul><li>Suministro de <b>3 × 380/220 V</b> (380 V entre fases, 220 V fase-neutro).</li><li>Se pide cuando la demanda supera aproximadamente <b>10 kW</b> o hay equipos trifásicos: bombas, motores, hornos, aire central. El límite de potencia de cada suministro lo fija la distribuidora.</li></ul>
+<h3>Tablero trifásico</h3><ul><li>Interruptor general <b>tetrapolar</b> (L1, L2, L3 y N).</li><li>Diferencial <b>tetrapolar de 30 mA</b>, o diferenciales bipolares de 30 mA por grupo con uno selectivo de 300 mA aguas arriba para no dejar todo sin energía.</li><li>Barras o borneras L1, L2, L3, N y PE identificadas.</li><li>Circuitos monofásicos con térmica bipolar; cargas trifásicas con térmica tripolar o tetrapolar.</li><li>Protector de sobretensiones (DPS) trifásico recomendado.</li></ul>
+<h3>Balanceo de fases</h3><ul><li>Repartí los circuitos monofásicos entre las tres fases para que cada una lleve una corriente parecida.</li><li>Con cargas electrónicas o LED el neutro puede cargarse mucho: usá neutro de <b>igual sección</b> que las fases.</li></ul>
+<h3>Motores</h3><ul><li>Protegelos con guardamotor, o contactor con relé térmico, ajustado a la corriente nominal del motor.</li><li>Poné un comando y una parada accesibles, e identificá el sentido de giro (secuencia de fases L1-L2-L3).</li></ul>`+SRC},
+  ind:{t:'Comercial e industrial',h:()=>`${WARN}
+<h3>Marco legal</h3><ul><li><b>Ley 19.587</b> de Higiene y Seguridad en el Trabajo y su <b>Decreto 351/79</b>: las instalaciones eléctricas de los establecimientos tienen que cumplir la reglamentación AEA y las operan personas capacitadas.</li><li><b>Resolución SRT 900/2015</b>: protocolo de medición de <b>puesta a tierra</b>, <b>continuidad de masas</b> y verificación de los <b>diferenciales</b>, firmado por un profesional habilitado y renovado periódicamente (en la práctica, una vez por año).</li><li>Lugares especiales dentro de la AEA 90364 parte 7: por ejemplo 7-718 para lugares de pública concurrencia y 7-701 para baños.</li></ul>
+<h3>Tableros industriales</h3><ul><li>Conjuntos de aparamenta según <b>IEC 61439</b> (en Argentina, serie IRAM 2181).</li><li><b>Poder de corte</b> de cada protección mayor o igual a la corriente de cortocircuito en ese punto, y <b>selectividad</b> entre general, seccionales y circuitos.</li><li>Contratapa o frente muerto que impida tocar partes con tensión; puerta con cierre; cartel de <b>riesgo eléctrico</b>.</li><li>Grado IP según el ambiente: IP54 o más con polvo, humedad o intemperie.</li><li>Espacio libre al frente del tablero para operar y mantener.</li><li>Planos conforme a obra, esquema unifilar y rotulado de cada salida, con la misma identificación en los cables.</li></ul>`+SRC},
+  col:{t:'Colores y rótulos',h:()=>`${WARN}
+<h3>Colores de conductores</h3><div class="tw"><table><thead><tr><th>Conductor</th><th>Color</th></tr></thead><tbody><tr><td>Fase (monofásico) / L1</td><td><span class="sw" style="background:#7b4a24"></span>Marrón (castaño)</td></tr><tr><td>L2</td><td><span class="sw" style="background:#222"></span>Negro</td></tr><tr><td>L3</td><td><span class="sw" style="background:#d8322c"></span>Rojo <span style="color:var(--mut)">(algunas guías actuales usan gris, como IEC 60445)</span></td></tr><tr><td>Neutro</td><td><span class="sw" style="background:#44aee6"></span>Celeste</td></tr><tr><td>Protección (PE)</td><td><span class="sw" style="background:repeating-linear-gradient(45deg,#3ea34f 0 4px,#f0d020 4px 7px)"></span>Verde-amarillo</td></tr></tbody></table></div>
+<ul><li><b>Celeste</b>: solo para neutro. <b>Verde-amarillo</b>: solo para tierra. Nunca para otra función.</li><li>En instalaciones viejas (rojo, blanco, verde) identificá cada cable con termocontraíble o cinta de color.</li></ul>
+<h3>Rotulado del tablero</h3><ul><li>Cada térmica y diferencial con el nombre del circuito, en etiqueta que no se borre.</li><li>Esquema unifilar actualizado junto al tablero y datos del instalador: nombre, matrícula y fecha.</li><li>Cartel de riesgo eléctrico visible en la puerta.</li></ul>`+SRC},
+  pat:{t:'Puesta a tierra',h:()=>`${WARN}
+<h3>Valores</h3><ul><li>Con diferencial de 30 mA, la AEA 771 admite una resistencia de puesta a tierra de hasta <b>40 Ω</b> (antes eran 10 Ω). En la práctica conviene apuntar a <b>10 Ω o menos</b>.</li><li>Medila con telurímetro y dejá asentado el valor en un protocolo.</li></ul>
+<h3>Cómo se arma</h3><ul><li>Jabalina normalizada (cobre-acero, IRAM) hincada en tierra, con <b>caja de inspección</b> accesible para medir.</li><li>Conductor de tierra hasta la barra PE del tablero principal; de ahí el PE verde-amarillo recorre todos los circuitos.</li><li>En esquema TT (el de las viviendas) las barras de <b>neutro y tierra no se unen</b> dentro del tablero.</li><li>Todas las masas metálicas se conectan a tierra: gabinete metálico, cañerías metálicas, artefactos clase I.</li></ul>`+SRC},
+  tra:{t:'Trámites',h:()=>`${WARN}
+<h3>Certificado DCI</h3><ul><li>El DCI (Documento o Certificado de Conformidad de la Instalación) lo firma un <b>electricista matriculado</b> y declara que la instalación cumple la reglamentación. Las distribuidoras (Edenor, Edesur) lo piden, por ejemplo, para nuevos suministros y para usuarios electrodependientes.</li><li>Entre otras cosas revisan: tablero principal conservado y con componentes accesibles, <b>diferencial</b> en todos los tableros, <b>puesta a tierra</b> con caja de inspección, <b>PE en todos los tomas</b> y tomas <b>IRAM 2071</b>.</li></ul>
+<h3>Para dejar en la obra</h3><ul><li>Esquema unifilar y plano del tablero (exportalo desde Tablerista y pegá el QR en la tapa).</li><li>Medición de puesta a tierra y prueba de los diferenciales con el botón T.</li><li>Datos del instalador y fecha.</li></ul>`+SRC}
+};
+let nTab='chk';
+function openNorm(tab){if(tab)nTab=tab;const keys=Object.keys(NORMAS);$('#nTabs').innerHTML=keys.map(k=>`<button data-t="${k}" class="${k===nTab?'on':''}">${NORMAS[k].t}</button>`).join('');
+  $('#nTabs').querySelectorAll('button').forEach(b=>b.onclick=()=>openNorm(b.dataset.t));$('#nBody').innerHTML=NORMAS[nTab].h();$('#mNorm').hidden=false}
+$('#bNorm').onclick=()=>openNorm();$('#nClose').onclick=()=>$('#mNorm').hidden=true;
+
+addEventListener('resize',renderHint);
+refresh();route();
+})();
+</script>
+<script>if('serviceWorker' in navigator&&location.protocol==='https:'&&!window.AndroidBridge)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
+</body>
+</html>
