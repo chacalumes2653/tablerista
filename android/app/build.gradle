@@ -1,0 +1,60 @@
+plugins {
+    id 'com.android.application'
+}
+
+def runNumber = (System.getenv('GITHUB_RUN_NUMBER') ?: '1').toInteger()
+
+android {
+    namespace 'ar.tablerista.app'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'ar.tablerista.app'
+        minSdk 24
+        targetSdk 34
+        versionCode runNumber
+        versionName "1.0.${runNumber}"
+    }
+
+    // Firma fija para que cada APK nuevo se instale encima del anterior sin desinstalar.
+    // La llave NO se sube al repo: GitHub Actions la arma desde el secret TABLERISTA_KEYSTORE_B64
+    // y la clave sale del secret TABLERISTA_KEYSTORE_PASS. Sin esos secrets se firma con una
+    // llave de prueba (el APK se instala, pero para actualizar hay que desinstalar el anterior).
+    def ks = file('tablerista.keystore')
+    def ksPass = System.getenv('TABLERISTA_KEYSTORE_PASS') ?: ''
+    def hasKs = ks.exists() && ksPass
+
+    signingConfigs {
+        if (hasKs) {
+            shared {
+                storeFile ks
+                storeType 'PKCS12'
+                storePassword ksPass
+                keyAlias 'tablerista'
+                keyPassword ksPass
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig hasKs ? signingConfigs.shared : signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    lint {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.11.0'
+    implementation 'androidx.core:core:1.13.1'
+}
