@@ -4,6 +4,6 @@ window.TABLERISTA_CFG = {
   // Dirección donde queda publicada la web (GitHub Pages). Ejemplo:
   siteUrl: "https://chacalumes2653.github.io/tablerista/",
   // Supabase → Project Settings → API
-  supabaseUrl: "",       // ej: "https://abcdefgh.supabase.co"
+  supabaseUrl: "https://oyuzgxydtowjetkwncms.supabase.co",
   supabaseAnonKey: ""    // la clave "anon public"
 };
