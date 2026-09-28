@@ -56,7 +56,7 @@ Cada vez que cambies algo y lo subas, se compila una versión nueva. El número 
 
 1. Cuenta de desarrollador de Google Play: US$ 25, un solo pago.
 2. Play pide el formato **AAB** en lugar de APK: se cambia `assembleRelease` por `bundleRelease` en el workflow.
-3. Para Play conviene una clave de firma nueva guardada como *secret* de GitHub, no la de este repo. La clave `android/app/tablerista.keystore` sirve para instalar el APK directo, pero está a la vista en un repo público: no la uses para Play.
+3. La llave de firma **no está en el repo** (sería pública). GitHub Actions la arma desde dos *secrets* (Settings → Secrets and variables → Actions): `TABLERISTA_KEYSTORE_B64` (el archivo `tablerista.keystore` en base64) y `TABLERISTA_KEYSTORE_PASS` (su clave). Sin ellos el APK se firma con una llave de prueba. Para Play Store usá una llave nueva, distinta de esta.
 4. Play pide política de privacidad, capturas y ficha de la app. Te las puedo preparar.
 
 ## Si algo falla

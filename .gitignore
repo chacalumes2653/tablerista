@@ -4,3 +4,7 @@ android/app/build/
 android/app/src/main/assets/
 android/local.properties
 .DS_Store
+
+# Llave de firma: va en GitHub Secrets, nunca en el repo
+*.keystore
+*.jks
